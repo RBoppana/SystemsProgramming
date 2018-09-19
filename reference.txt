@@ -1,0 +1,32 @@
+deymious@yahoo.com
+email subject: [214]...
+office hours: Hill 361, Mon/Wed, 3:30-5:00 
+
+C COMPILING
+
+gcc <sourcefile>
+
+gcc -o <execname> <sourcefile>
+
+gcc -c <sourcefile> => outputs an object file (.o extension)
+
+always return methods/functions
+	(0 typically represents success; -1 failure; > 0 something else)
+
+terminology:
+	program
+	object file (partly compiled source)
+	source code
+
+types:
+	char
+	int
+	double
+
+	short
+	u_int 
+	u_short
+	
+	X String
+	"string" == "null-terminated char array"
+	must end a string literal with a null terminator	
