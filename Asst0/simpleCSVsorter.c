@@ -4,6 +4,6 @@
 #include <math.h>
 #include <simpleCSVsorter.h>
 
-int main (int argc, char **argv){
-  
+int main(int argc, char** argv){
+	
 }

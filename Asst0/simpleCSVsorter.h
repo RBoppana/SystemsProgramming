@@ -40,17 +40,19 @@ typedef struct Listing{
 } Listing;
 
 typedef struct Node{
-	Listing element;
-	Node next;
+	Listing* element;
+	Node* next;
 } Node;
 
-Node front = NULL;
+Node* front = NULL;
 
-//newnode = Node createNode(Listing...);
-
-newnode.next = front;
-
-front = newnode;
+int insertNode(Listing* input){
+	Node* newNode = (Node*)malloc(sizeof(Node));
+	newNode->element = input;
+	newNode->next = front;
+	front = newNode;
+	return 0;
+};
 
 //Suggestion: prototype a mergesort function
 //multisort function, mergesort that takes an array, and has a configurable sorting element
