@@ -1,12 +1,5 @@
-/*****
-*
-*	Define structures and function prototypes for your sorter
-*
-*
-*
-******/
-
-//Suggestion: define a struct that mirrors a record (row) of the data set
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct Listing{
 	char[20] color;
@@ -41,18 +34,15 @@ typedef struct Listing{
 
 typedef struct Node{
 	Listing* element;
-	Node* next;
+	struct Node* next;
 } Node;
 
 Node* front = NULL;
 
-int insertNode(Listing* input){
-	Node* newNode = (Node*)malloc(sizeof(Node));
-	newNode->element = input;
-	newNode->next = front;
-	front = newNode;
-	return 0;
-};
+void insertNode(Listing* input);
+
+char* removeWhitespace(char* string);
+
 
 //Suggestion: prototype a mergesort function
 //multisort function, mergesort that takes an array, and has a configurable sorting element
