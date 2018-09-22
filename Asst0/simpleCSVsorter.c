@@ -5,20 +5,21 @@
 #include "simpleCSVsorter.h"
 
 int main(int argc, char** argv){
-  if(argc != 3){
-    printf("Please specify the correct number of arguments.");
-    return 0;
-  } else if (strcmp(argv[1], "-c") != 0){
-    printf("Unrecognized parameter.");
-    return 0;
-  }
+	if(argc != 3){
+		printf("Please specify the correct number of arguments.");
+		return 0;
+	}else if(strcmp(argv[1], "-c") != 0){
+		printf("Unrecognized parameter.");
+		return 0;
+	}
 
-  // Discard first line
-  scanf("\n");
-
-	while(/*there is more lines*/){
+	while(){
 		Listing* temp = (Listing*)malloc(sizeof(Listing)); //should i reallocate memory instead of mallocing
-		scanf("%s,", temp->color);
+		scanf("\n%s,", temp->color);
+		if (temp->color == NULL) {
+			break;
+			free(temp);
+		}
 		scanf("%s,", temp->director_name);
 		scanf("%d,", temp->num_critic_for_reviews);
 		scanf("%d,", temp->duration);
@@ -45,9 +46,9 @@ int main(int argc, char** argv){
 		scanf("%d,", temp->actor_2_facebook_likes);
 		scanf("%f,", temp->imdb_score);
 		scanf("%f,", temp->aspect_ratio);
-		scanf("%d/n", temp->movie_facebook_likes); //might cause error if last characteris not newline
+		scanf("%d", temp->movie_facebook_likes); 
 		insertNode(temp);
-	} // Linked list is complete with all elements
+	}// Linked list is complete with all elements
 
 	//*all stored strings need to be trimmed when actually sorting*
 
@@ -67,7 +68,7 @@ int main(int argc, char** argv){
 		collection[i] = /*&*/ptr->element; //not sure if it needs & symbol
 	}
 
-	collection = MergeSort(collection);
+	collection = mergeSort(collection);
 
 	//curtains close
 }
