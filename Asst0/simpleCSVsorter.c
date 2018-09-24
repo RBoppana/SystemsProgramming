@@ -15,11 +15,10 @@ int main(int argc, char** argv){
 
 	size_t columns = 0;
 	while(!feof(stdin)){
-	  char* string = readString(stdin, 500, ',');
-	  
+	  char* string = readString(stdin, 500, ','); 
 	}
 
-	while(){
+	/*while(){
 		Listing* temp = (Listing*)malloc(sizeof(Listing));
 		scanf("%*[^\n]\n%[^,]s,", temp->color);
 		if (temp->color == NULL) {
@@ -54,7 +53,9 @@ int main(int argc, char** argv){
 		scanf("%f,", temp->aspect_ratio);
 		scanf("%d", temp->movie_facebook_likes); 
 		insertNode(temp);
-	}// Linked list is complete with all elements
+	}*/
+	
+	// Linked list is complete with all elements
 
 	//*all stored strings need to be trimmed when actually sorting*
 

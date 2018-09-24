@@ -32,19 +32,26 @@
 	int movie_facebook_likes;
 } Listing;*/
 
-typedef union Listing {
+typedef union Value {
   int integer;
   double decimal;
   char* string;
-} Listing;
+} Value; //Just one element of a Listing
 
 typedef struct Node {
 	Listing* element;
 	struct Node* next;
 } Node;
 
-Node* front;
-Listing** data;
+int columns = 0;
+
+typedef struct Listing {
+	Value[columns] columnArray;
+} Listing;
+
+Node* front; //Link List to count rows of entries
+
+Listing* data; //Array of Listings
 int** dataTypes; // 0 for int, 1 for double, 2 for string
 
 void insertNode(Listing* input);
@@ -53,7 +60,9 @@ char* readString(FILE* fp, size_t size, char stop);
 
 //char* removeWhitespace(char* string);
 
-//void printData(FILE* fp, Listing** data);
+//void printData(FILE* fp, Listing* data);
+
+Listing* mergeSort(Listing* input, int** inputTypes);
 
 //Suggestion: prototype a mergesort function
 //multisort function, mergesort that takes an array, and has a configurable sorting element
