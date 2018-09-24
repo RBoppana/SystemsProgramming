@@ -1,0 +1,7 @@
+Design:
+
+Our first design issue was to decide how to properly store the data from the CSV file. We initially decided to create a specific struct for the provided data columns from IMDB. In addition, since we wouldn't know how many rows were present in the CSV and would only get a single chance to parse through the data, we decided to store the data in a linked list and copy it over to an array at a later time.
+
+After some consideration with this design we realized that we would encounter trouble with dynamically accessing the desired value from the struct, as well as being unable to complete the extra credit. To address this we changed our design to instead store each row as an array of unions, each of which contains either an integer, a double, or a pointer to a string. Of course, this requires that the data types for each column be passed in along with the column names for more general CSV files.
+
+In addition, we realized that we would need to store strings of unknown length. We decided to implement a function to read characters from a file pointer and realocate the string to a larger char array whenever necessary.

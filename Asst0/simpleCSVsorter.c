@@ -6,16 +6,22 @@
 
 int main(int argc, char** argv){
 	if(argc != 3){
-		printf("Please specify the correct number of arguments.");
-		return 0;
-	}else if(strcmp(argv[1], "-c") != 0){
-		printf("Unrecognized parameter.");
-		return 0;
+	  fprintf(stderr, "Please specify the correct number of arguments.");
+		return -1;
+	} else if(strcmp(argv[1], "-c") != 0){
+	  fprintf(stderr, "Unrecognized parameter.");
+		return -1;
+	}
+
+	size_t columns = 0;
+	while(!feof(stdin)){
+	  char* string = readString(stdin, 500, ',');
+	  
 	}
 
 	while(){
-		Listing* temp = (Listing*)malloc(sizeof(Listing)); //should i reallocate memory instead of mallocing
-		scanf("\n%s,", temp->color);
+		Listing* temp = (Listing*)malloc(sizeof(Listing));
+		scanf("%*[^\n]\n%[^,]s,", temp->color);
 		if (temp->color == NULL) {
 			break;
 			free(temp);
