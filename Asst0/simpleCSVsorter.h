@@ -51,7 +51,7 @@ typedef struct Listing {
 
 Node* front; //Link List to count rows of entries
 
-Listing* data; //Array of Listings
+Value** data;
 int** dataTypes; // 0 for int, 1 for double, 2 for string
 
 void insertNode(Listing* input);
@@ -62,7 +62,7 @@ char* readString(FILE* fp, size_t size, char stop);
 
 //void printData(FILE* fp, Listing* data);
 
-Listing* mergeSort(Listing* input, int** inputTypes);
+Value** mergeSort(Value** input, int** inputTypes);
 
 //Suggestion: prototype a mergesort function
 //multisort function, mergesort that takes an array, and has a configurable sorting element

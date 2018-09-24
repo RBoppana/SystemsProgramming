@@ -54,28 +54,5 @@ int main(int argc, char** argv){
 		scanf("%d", temp->movie_facebook_likes); 
 		insertNode(temp);
 	}*/
-	
-	// Linked list is complete with all elements
 
-	//*all stored strings need to be trimmed when actually sorting*
-
-	int counter = 0;
-
-	Node* ptr = front;
-	while(ptr != NULL){
-		counter++;
-		ptr = ptr->next;
-	}//# of LinkList elements set
-
-	Listing[counter] collection; //not sure if this needs to be malloced
-
-	ptr = front;
-
-	for(int i = 0; i < counter; i++){
-		collection[i] = /*&*/ptr->element; //not sure if it needs & symbol
-	}
-
-	collection = mergeSort(collection);
-
-	//curtains close
 }
