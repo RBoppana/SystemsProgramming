@@ -29,6 +29,6 @@ char* readString(FILE* fp, size_t size, char stop){
   return realloc(string, length * sizeof(char));
 }
 
-Listing* mergeSort(Listing* input, int** inputTypes){
+Value** mergeSort(Value** input, int** inputTypes){
   
 }
