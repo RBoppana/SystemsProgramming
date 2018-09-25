@@ -15,9 +15,9 @@ typedef struct Node {
 Node* front; //Link List to count rows of entries
 
 Value** data;
-int** dataTypes; // 0 for int, 1 for double, 2 for string
+int* dataTypes; // 0 for int, 1 for double, 2 for string, same for every row of data array
 
-void insertNode(Listing* input);
+void insertNode(Value* input);
 
 char* readString(FILE* fp, size_t size, char stop);
 
