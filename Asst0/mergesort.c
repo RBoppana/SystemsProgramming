@@ -29,6 +29,12 @@ char* readString(FILE* fp, size_t size, char stop){
   return realloc(string, length * sizeof(char));
 }
 
-Value** mergeSort(Value** input, int** inputTypes){
+char* readString
+
+Value** mergeSort(Value** input, int** inputTypes, int compareColumn, int size){
+  if(size = 1){
+    return input;
+  }
+
   
 }

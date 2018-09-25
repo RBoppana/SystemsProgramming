@@ -36,18 +36,12 @@ typedef union Value {
   int integer;
   double decimal;
   char* string;
-} Value; //Just one element of a Listing
+} Value; 
 
 typedef struct Node {
-	Listing* element;
+	Value* element;
 	struct Node* next;
 } Node;
-
-int columns = 0;
-
-typedef struct Listing {
-	Value[columns] columnArray;
-} Listing;
 
 Node* front; //Link List to count rows of entries
 
