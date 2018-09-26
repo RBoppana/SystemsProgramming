@@ -13,12 +13,46 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
-	size_t columns = 0;
+	char* headerRow = readHeader();
+
+	//go character by character, when characters match, see if all characters in string match, then nthcomma as comma before desired column
+	//later on david will set COI value with string after nthcomma in each row
+	int nthComma = 0;
+	char* headerRow = data[0]->row;
+	i = 0;
+	while(){
+		if(headerRow[i] == \0)
+			break;
+		while(headerRow[i] == argv[2][0]){
+			i++;
+		}
+		if(headerRow[i] == ',')
+			nthComma++;
+		i++;
+	}
 
 	int numRows = 0;
-	while(!feof(stin)){
+	while(!feof(stdin)){
 		Listing* temp = (Listing*)malloc(sizeof(Listing));
-		readLine(,,,temp);
+		readLine(,,nthComma,temp);
+		front = insertNode(temp);
+		numRows++;
+	}
+
+	data = (Listing*)malloc(numRows*sizeof(Listing));
+
+	int i = numRows-1;
+	while(front != NULL){
+		data[i--] = front->element;
+		Listing* temp = front;
+		front = front->next;
+		free(temp);
+	}
+
+	indexArray = (int*)malloc(numRows*sizeof(int));
+
+	for(i = 0; i < numRows; i++){
+		indexArray[i] = i;
 	}
 
 	/*int firstRowDone = 0;
