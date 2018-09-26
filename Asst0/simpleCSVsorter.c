@@ -25,6 +25,7 @@ int main(int argc, char** argv){
 
 	if(token == NULL){
 		fprintf(stderr, "Column not found.");
+		return -1;
 	}
 
 	int numRows = 0;
