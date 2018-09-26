@@ -14,7 +14,14 @@ int main(int argc, char** argv){
 	}
 
 	size_t columns = 0;
-	int firstRowDone = 0;
+
+	int numRows = 0;
+	while(!feof(stin)){
+		Listing* temp = (Listing*)malloc(sizeof(Listing));
+		readLine(,,,temp);
+	}
+
+	/*int firstRowDone = 0;
 	char* columnHeads;
 	while(!firstRowDone){
 	  columns++;
@@ -41,7 +48,7 @@ int main(int argc, char** argv){
 	while(front != NULL){
 		data[ptr++] = front;
 		front = front.next; 
-	}
+	}*/
 
 	//mergesort data
 

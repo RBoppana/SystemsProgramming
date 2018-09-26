@@ -10,7 +10,7 @@ void insertNode(Listing* input){
 	return;
 }
 
-char* readString(FILE* fp, size_t size, char stop){
+char* readLine(FILE* fp, size_t size, char stop, Listing* storageLocation){
   char* string = (char*) malloc(size * sizeof(char));
   size_t length = 0;
   char current;

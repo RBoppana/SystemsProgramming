@@ -1,25 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef union Value {
-  int integer;
-  double decimal;
-  char* string;
-} Value; 
+typedef struct Listing {
+  char* row;
+  char* COI;
+} Listing; 
 
 typedef struct Node {
-	Value* element;
+	Listing* element;
 	struct Node* next;
 } Node;
 
 Node* front; //Link List to count rows of entries
 
-Value** data;
-int* dataTypes; // 0 for int, 1 for double, 2 for string, same for every row of data array
+Listing* data;
+int* indexArray;
 
-void insertNode(Value* input);
+void insertNode(Listing* input);
 
-char* readString(FILE* fp, size_t size, char stop);
+char* readLine(FILE* fp, size_t size, char stop, Listing* storageLocation);
 
 //char* removeWhitespace(char* string);
 
