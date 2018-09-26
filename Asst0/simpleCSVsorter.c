@@ -13,22 +13,18 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
-	char* headerRow = readHeader();
-
-	//go character by character, when characters match, see if all characters in string match, then nthcomma as comma before desired column
-	//later on david will set COI value with string after nthcomma in each row
 	int nthComma = 0;
-	char* headerRow = data[0]->row;
-	i = 0;
-	while(){
-		if(headerRow[i] == \0)
+	char* headerRow = readHeader();
+	char* token = strtok(headerRow, ",\n");
+	while(token != NULL){
+		if(strcmp(token, argv[2]) == 0)
 			break;
-		while(headerRow[i] == argv[2][0]){
-			i++;
-		}
-		if(headerRow[i] == ',')
-			nthComma++;
-		i++;
+		token = strtok(NULL, ",\n");
+		nthcomma++;
+	}
+
+	if(token == NULL){
+		fprintf(stderr, "Column not found.");
 	}
 
 	int numRows = 0;
@@ -85,5 +81,7 @@ int main(int argc, char** argv){
 	}*/
 
 	//mergesort data
+	//print headerrow
+	//print data in indexarray order
 
 }
