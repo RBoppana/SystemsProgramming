@@ -85,10 +85,9 @@ char* readHeader(){
   return realloc(string, length * sizeof(char));
 }
 
- mergeSort(Value** input, int** inputTypes, int compareColumn, int size){
+int* mergeSort(Listing* reference, int* indexes, int size){
   if(size = 1){
     return input;
   }
-
-  
+ 
 }
