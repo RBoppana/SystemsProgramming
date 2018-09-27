@@ -20,7 +20,7 @@ int main(int argc, char** argv){
 		if(strcmp(token, argv[2]) == 0)
 			break;
 		token = strtok(NULL, ",\n");
-		nthcomma++;
+		nthComma++;
 	}
 
 	if(token == NULL){
