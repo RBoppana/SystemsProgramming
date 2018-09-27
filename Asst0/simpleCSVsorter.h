@@ -18,9 +18,13 @@ int* indexArray;
 
 void insertNode(Listing* input);
 
-char* populateListing(int index, char* line, Listing* listing);
+int findHeader(char* headerString, char* columnName);
+
+int populateListing(int index, char* line, Listing* listing);
 
 char* readLine(int fd);
+
+int numChars(char* string, char character);
 
 //char* removeWhitespace(char* string);
 

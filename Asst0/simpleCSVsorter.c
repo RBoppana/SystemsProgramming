@@ -6,26 +6,22 @@
 
 int main(int argc, char** argv){
 	if(argc != 3){
-	  fprintf(stderr, "Please specify the correct number of arguments.");
+	  fprintf(stderr, "Please specify the correct number of arguments.\n");
 		return -1;
 	} else if(strcmp(argv[1], "-c") != 0){
-	  fprintf(stderr, "Unrecognized parameter.");
+	  fprintf(stderr, "Unrecognized parameter.\n");
 		return -1;
 	}
 
-	int nthComma = 0;
-	char* headerRow = readHeader();
-	char* token = strtok(headerRow, ",\n");
-	while(token != NULL){
-		if(strcmp(token, argv[2]) == 0)
-			break;
-		token = strtok(NULL, ",\n");
-		nthComma++;
+	char* headerRow = readLine(0);
+	if (!headerRow){
+	  fprintf(stderr, "Header row missing.\n");
+	  return -1;
 	}
-
-	if(token == NULL){
-		fprintf(stderr, "Column not found.");
-		return -1;
+	int index = findHeader(headerRow, argv[2]);
+	if (index < 0){
+	  fprintf(stderr, "Column name not found.");
+	  return -1;
 	}
 
 	int numRows = 0;
