@@ -85,9 +85,15 @@ char* readHeader(){
   return realloc(string, length * sizeof(char));
 }
 
+int* merge(int* inputArray1, inputArray2){
+
+}
+
 int* mergeSort(Listing* reference, int* indexes, int size){
   if(size = 1){
-    return input;
+    return indexes;
   }
- 
+  
 }
+
+

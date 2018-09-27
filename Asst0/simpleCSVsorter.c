@@ -31,7 +31,7 @@ int main(int argc, char** argv){
 	int numRows = 0;
 	while(!feof(stdin)){
 		Listing* temp = (Listing*)malloc(sizeof(Listing));
-		readLine(,,nthComma,temp);
+		readLine(nthComma,temp);
 		front = insertNode(temp);
 		numRows++;
 	}

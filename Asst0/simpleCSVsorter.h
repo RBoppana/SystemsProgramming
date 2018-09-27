@@ -24,6 +24,8 @@ char* readLine(FILE* fp, size_t size, char stop, Listing* storageLocation);
 
 //void printData(FILE* fp, Listing* data);
 
+int* merge(int* inputArray1, inputArray2);
+
 int* mergeSort(Listing* reference, int* indexes, int size);
 
 //Suggestion: prototype a mergesort function
