@@ -30,7 +30,7 @@ int numChars(char* string, char character);
 
 int* merge(int* inputArray1, int* inputArray2);
 
-int* mergeSort(Listing* reference, int* indexes, int size);
+int* mergeSort(int* indexes, int size);
 
 void printData(int fd, Listing* data, int size);
 

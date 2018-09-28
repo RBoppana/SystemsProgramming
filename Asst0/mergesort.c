@@ -92,15 +92,30 @@ int numChars(char* string, char character){
   return count;
 }
 
-int* merge(int* inputArray1, int inputArray2){
+int* merge(int* inputArray1, int* inputArray2){
 
 }
 
-int* mergeSort(Listing* reference, int* indexes, int size){
+int* mergeSort(int* indexes, int size){
   if(size = 1){
     return indexes;
   }
+
+  int* A1[size/2]; 
+  int* A2[size-(size/2)];
+
+  int i;
+  for(i = 0; i < size/2; i++){
+    A1[i] = indexes[i];
+  }
+  for(i = 0; i < (size-(size/2)); i++){
+    A2[i] = indexes[size/2+i];
+  }
   
+  int* SortedA1 = mergeSort(A1, size/2);
+  int* SortedA2 = mergeSort(A2, (size-(size/2)));
+
+  return merge(SortedA1, SortedA2);
 }
 
 void printData(int fd, Listing* data, int size){
