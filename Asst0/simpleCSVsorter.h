@@ -28,9 +28,11 @@ int numChars(char* string, char character);
 
 //char* removeWhitespace(char* string);
 
-int* merge(int* inputArray1, int* inputArray2);
+int comparator(char* str1, char* str2);
 
-int* mergeSort(Listing* reference, int* indexes, int size);
+int* merge(int* input1, int size1, int* input2, int size2);
+
+int* mergeSort(int* indexes, int size);
 
 char* stringToken(char* string, char token);
 

@@ -52,7 +52,7 @@ int main(int argc, char** argv){
 		indexArray[i] = i;
 	}
 
-	indexArray = mergeSort(data, indexArray, numRows);
+	indexArray = mergeSort(indexArray, numRows);
 	
 	printf("%s\n", headerRow);
 	for(i = 0; i < numRows; i++){

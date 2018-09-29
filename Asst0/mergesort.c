@@ -100,22 +100,62 @@ int numChars(char* string, char character){
   return count;
 }
 
-int* merge(int* inputArray1, int* inputArray2){
-  return NULL;
-}
-
-int* mergeSort(Listing* reference, int* indexes, int size){
-  if(size == 1){
-    return indexes;
-  }
-  return NULL;
-}
 
 //Sets the delimiter to null and return a pointer to the character after
 char* stringToken(char* string, char token){
   char* ptr = strchr(string, token);
   *ptr = '\0';
   return ;
+}
+
+int comparator(char* str1, char* str2) {
+
+}
+
+int* merge(int* input1, int size1, int* input2, int size2){
+  int* AA[size1 + size2];
+  int i = 0;
+  int j = 0;
+
+  while(i < size1 && j < size2){
+	char* str1 = data[input1[i]]->COI;
+	char* str2 = data[input2[j]]->COI;
+	if(comparator(str1, str2) < 0){
+      AA[i+j] = input1[i];
+      i++;
+    }else if(comparator(str1, str2) > 0){
+      AA[i+j] = input2[j];
+      j++;
+    }else if(comparator(str1, str2) == 0){
+      AA[i+j] = input1[i];
+      i++;
+      AA[i+j] = input2[j];
+      j++;
+    }
+  }
+  return AA;
+}
+
+int* mergeSort(int* indexes, int size){
+  if(size = 1){
+    return indexes;
+  }
+
+  int* A1[size/2]; 
+  int* A2[size-(size/2)];
+
+  int i;
+  for(i = 0; i < size/2; i++){
+    A1[i] = indexes[i];
+  }
+  for(i = 0; i < (size-(size/2)); i++){
+    A2[i] = indexes[size/2+i];
+  }
+  
+  int* SortedA1 = mergeSort(A1, size/2);
+  int* SortedA2 = mergeSort(A2, (size-(size/2)));
+
+  return merge(SortedA1, size/2, SortedA2, (size-(size/2)));
 }
 
 void printData(int fd, Listing* data, int size){
