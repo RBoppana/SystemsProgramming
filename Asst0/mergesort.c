@@ -92,29 +92,32 @@ int numChars(char* string, char character){
   return count;
 }
 
-int* merge(int* inputArray1, int size1, int* inputArray2, int size2){
+int comparator(char* str1, char* str2) {
+
+}
+
+int* merge(int* input1, int size1, int* input2, int size2){
   int* AA[size1 + size2];
   int i = 0;
   int j = 0;
 
   while(i < size1 && j < size2){
-    if(data[]->COI){
-      AA[i+j] = ;
+	char* str1 = data[input1[i]]->COI;
+	char* str2 = data[input2[j]]->COI;
+	if(comparator(str1, str2) < 0){
+      AA[i+j] = input1[i];
       i++;
-    }
-    if(data[]->COI){
-      AA[i+j] = ;
+    }else if(comparator(str1, str2) > 0){
+      AA[i+j] = input2[j];
       j++;
-    }
-    if(data == ){
-      AA[i+j] = ;
+    }else if(comparator(str1, str2) == 0){
+      AA[i+j] = input1[i];
       i++;
-      AA[i+j] = ;
+      AA[i+j] = input2[j];
       j++;
     }
   }
-
-  
+  return AA;
 }
 
 int* mergeSort(int* indexes, int size){
