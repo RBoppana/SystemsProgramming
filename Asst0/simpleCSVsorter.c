@@ -13,17 +13,21 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
-	char* headerRow = readLine(0);
-	if (!headerRow){
+	char* headerString = readLine(0);
+	if (!headerString){
 	  fprintf(stderr, "Header row missing.\n");
 	  return -1;
 	}
-	int index = findHeader(headerRow, argv[2]);
+	printf("Column name: %s\n", argv[2]);
+	int index = findHeader(headerString, argv[2]);
 	if (index < 0){
-	  fprintf(stderr, "Column name not found.");
+	  fprintf(stderr, "Column name not found.\n");
 	  return -1;
 	}
 
+	fprintf(stdout, "Index: %d\n", index);
+	free(headerString);
+	/*
 	int numRows = 0;
 	while(!feof(stdin)){
 		Listing* temp = (Listing*)malloc(sizeof(Listing));
@@ -54,4 +58,7 @@ int main(int argc, char** argv){
 	for(i = 0; i < numRows; i++){
 		printf("%s\n", data[indexArray[i]]->row);
 	}
+	*/
+
+	return 0;
 }

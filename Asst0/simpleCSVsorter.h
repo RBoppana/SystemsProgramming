@@ -32,6 +32,8 @@ int* merge(int* inputArray1, int* inputArray2);
 
 int* mergeSort(Listing* reference, int* indexes, int size);
 
+char* stringToken(char* string, char token);
+
 void printData(int fd, Listing* data, int size);
 
 //Suggestion: prototype a mergesort function

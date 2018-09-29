@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include "simpleCSVsorter.h"
 
 void insertNode(Listing* input){
@@ -11,15 +13,18 @@ void insertNode(Listing* input){
 }
 
 int findHeader(char* headerString, char* columnName){
+  printf("%s\n", headerString);
   char temp[strlen(headerString) + 1]; //For storing the current column value
+  temp[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
-  char* token = strtok(headerString, ",");
-  while (token != NULL){
+  char* token 
+  while (end = strchr(start, ',')){
     strcat(temp, token);
+    printf("token: %s\ttemp: %s \n", token, temp);
     numQuotes += numChars(token, '"');
     if (numQuotes % 2 == 1){ //Check if comma is part of string
-      strcat(col, ",");
+      strcat(temp, ",");
     } else if (strcmp(temp, columnName) == 0) { //If not, check the name
       return currentIndex;
     } else {
@@ -32,16 +37,18 @@ int findHeader(char* headerString, char* columnName){
 }
 
 int populateListing(int index, char* line, Listing* listing){
-  char temp[strlen(line) + 1];
+  char* temp = (char*) malloc((strlen(line) + 1) * sizeof(char));
+  if (!temp) return -1;
   strcpy(temp, line);
   listing->row = temp;
   
-  char col[strlen(line) + 1] = "";
+  char col[strlen(line) + 1];
+  col[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
   char* token = strtok(line, ",");
   while (token != NULL){
-    if (currentIndex = index){
+    if (currentIndex == index){
       strcat(col, token);
     }
     numQuotes += numChars(token, '"');
@@ -52,9 +59,10 @@ int populateListing(int index, char* line, Listing* listing){
     }
     token = strtok(NULL, ",");
   }
-  col = realloc(col, (strlen(col) + 1) * sizeof(char));
-  if (!col) return -1;
-  listing->COI = col;
+  char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
+  if (!new) return -1;  
+  strcpy(new, col);
+  listing->COI = new;
 
   return 0;
 }
@@ -69,9 +77,9 @@ char* readLine(int fd){
   while (current != EOF && current != '\n'){
     string[length] = current;
     length++;
-    if (length == size){
-      size *= 2;
-      string = realloc(string, size * sizeof(char));
+    if (length == capacity){
+      capacity *= 2;
+      string = realloc(string, capacity * sizeof(char));
       if (!string) return string;
     }
     read(fd, &current, 1);
@@ -92,17 +100,29 @@ int numChars(char* string, char character){
   return count;
 }
 
-int* merge(int* inputArray1, int inputArray2){
-
+int* merge(int* inputArray1, int* inputArray2){
+  return NULL;
 }
 
 int* mergeSort(Listing* reference, int* indexes, int size){
-  if(size = 1){
+  if(size == 1){
     return indexes;
   }
-  
+  return NULL;
+}
+
+//Sets the delimiter to null and return a pointer to the character after
+char* stringToken(char* string, char token){
+  char* ptr = strchr(string, token);
+  *ptr = '\0';
+  return ;
 }
 
 void printData(int fd, Listing* data, int size){
   
+}
+
+void printListing(Listing* data){
+  fprintf(stdout, "%s\n", data->row);
+  fprintf(stdout, "%s\n", data->COI);
 }
