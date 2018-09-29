@@ -109,7 +109,27 @@ char* stringToken(char* string, char token){
 }
 
 int comparator(char* str1, char* str2) {
-
+	if (columnType == doubles) {
+		double num1 = atol(str1);
+		double num2 = atol(str2);
+		if (num1 < num2) {
+			return -1;
+		}else if (num1 > num2) {
+			return 1;
+		}else {
+			return 0;
+		}
+	}else if (columnType == strings) {
+		if (strcmp(str1, str2) < 0) {
+			return -1;
+		}
+		else if (strcmp(str1, str2) > 0) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
+	}
 }
 
 int* merge(int* input1, int size1, int* input2, int size2){
@@ -133,6 +153,17 @@ int* merge(int* input1, int size1, int* input2, int size2){
       j++;
     }
   }
+
+  while (i < size1) { //copy remaining elements in i
+	  AA[i + j] = input1[i];
+	  i++;
+  }
+
+  while (j < size2) { //copy remaining elements in j
+	  AA[i + j] = input2[j];
+	  j++;
+  }
+
   return AA;
 }
 
@@ -149,7 +180,7 @@ int* mergeSort(int* indexes, int size){
     A1[i] = indexes[i];
   }
   for(i = 0; i < (size-(size/2)); i++){
-    A2[i] = indexes[size/2+i];
+    A2[i] = indexes[(size/2)+i];
   }
   
   int* SortedA1 = mergeSort(A1, size/2);
