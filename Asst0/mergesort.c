@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include "simpleCSVsorter.h"
 
 void insertNode(Listing* input){
@@ -59,13 +60,14 @@ int populateListing(int index, char* line, Listing* listing){
       currentIndex++;
     }
   }
-  if (col[0] = '\0'){
+  if (col[0] == '\0'){
     listing->COI = NULL;
   } else {
     char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
     if (!new) return -1;  
     strcpy(new, col);
-    listing->COI = new;
+    char* trimmed = removeWhitespace(new);
+    listing->COI = trimmed;
   }
   
   return 0;
@@ -82,7 +84,7 @@ char* readLine(int fd){
     length++;
     if (length == capacity){
       capacity *= 2;
-      string = realloc(string, capacity * sizeof(char));
+      string = (char*) realloc(string, capacity * sizeof(char));
       if (!string) return string;
     }
   }
@@ -92,7 +94,7 @@ char* readLine(int fd){
   } 
   string[length] = '\0';
   length++;
-  return realloc(string, length * sizeof(char));
+  return (char*) realloc(string, length * sizeof(char));
 }
 
 int numChars(char* string, char character){
@@ -105,9 +107,33 @@ int numChars(char* string, char character){
   }
   return count;
 }
+
+char* removeWhitespace(char* string){
+  int start, end;
+  int i;
+  for (i = 0; i < strlen(string); i++){ //Preceding whitespace
+    if (isspace(string[i])) continue;
+    start = i;
+    break;
+    
+  }
+  for (i = strlen(string) - 1; i >= 0; i--){ //Proceding whitespace
+    if (isspace(string[i])) continue;
+    end = i;
+    break;
+  }
+  char* result = (char*) malloc((end - start + 2)* sizeof(char));
+  if (!result) return result;
+  strcpy(result, &string[start]);
+  result[end - start + 1] = '\0';
+  free(string);
+  return result;
+}
+
+
 /*
 int comparator(char* str1, char* str2) {
-	if (columnType == doubles) {
+	if (columnType == 0) {
 		double num1 = atol(str1);
 		double num2 = atol(str2);
 		if (num1 < num2) {
@@ -117,7 +143,7 @@ int comparator(char* str1, char* str2) {
 		}else {
 			return 0;
 		}
-	}else if (columnType == strings) {
+	}else if (columnType == 1) {
 		if (strcmp(str1, str2) < 0) {
 			return -1;
 		}

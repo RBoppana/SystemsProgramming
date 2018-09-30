@@ -28,7 +28,7 @@ char* readLine(int fd);
 
 int numChars(char* string, char character);
 
-//char* removeWhitespace(char* string);
+char* removeWhitespace(char* string);
 
 //int comparator(char* str1, char* str2);
 
