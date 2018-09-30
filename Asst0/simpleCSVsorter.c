@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "simpleCSVsorter.h"
 
 int main(int argc, char** argv){
@@ -23,7 +24,6 @@ int main(int argc, char** argv){
 	  fprintf(stderr, "Column name not found.\n");
 	  return -1;
 	}
-	free(headerString);
 	
 	//Create linked list of rows
 	int numRows = 0;
@@ -40,17 +40,18 @@ int main(int argc, char** argv){
 	}
 
 	//printLL(front);
-
-	data = (Listing*)malloc(numRows*sizeof(Listing));
-
+	
+	//Put Linked List into array of pointers
+	data = (Listing**)malloc(numRows*sizeof(Listing*));
 	int i = numRows-1;
 	while(front != NULL){
-		data[i--] = front->element;
-		Listing* temp = front;
+	  data[i--] = front->element;
+		Node* temp = front;
 		front = front->next;
 		free(temp);
 	}
-
+	
+	//Determine datatype of column
 	columnType = 0;
 	for (i = 0; i < numRows; i++) {
 		char* COItemp = data[i]->COI;
@@ -62,19 +63,21 @@ int main(int argc, char** argv){
 			}
 		}
 	}
-
+	
+	//Create int array for sorting
 	indexArray = (int*)malloc(numRows*sizeof(int));
-
 	for(i = 0; i < numRows; i++){
 		indexArray[i] = i;
 	}
 
+	//Sort!
+	AA = malloc(1);
 	indexArray = mergeSort(indexArray, numRows);
+
+	//Output data
+	printData(1, headerString, numRows);
 	
-	printf("%s\n", headerRow);
-	for(i = 0; i < numRows; i++){
-		printf("%s\n", data[indexArray[i]]->row);
-	}
-	
+	free(headerString);
+
 	return 0;
 }

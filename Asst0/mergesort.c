@@ -79,7 +79,7 @@ char* readLine(int fd){
   if (!string) return string;
   size_t length = 0;
   char current;
-  while (read(fd, &current, 1) != 0 && current != '\n'){
+  while (read(fd, &current, sizeof(char)) != 0 && current != '\n'){
     string[length] = current;
     length++;
     if (length == capacity){
@@ -130,10 +130,14 @@ char* removeWhitespace(char* string){
   return result;
 }
 
-
-/*
 int comparator(char* str1, char* str2) {
-	if (columnType == 0) {
+  if (!str1 && !str2){
+    return 0;
+  }
+  if (!str1 || !str2){
+    return !str1 ? -1 : 1;
+  }
+  if (columnType == 0) {
 		double num1 = atol(str1);
 		double num2 = atol(str2);
 		if (num1 < num2) {
@@ -143,7 +147,7 @@ int comparator(char* str1, char* str2) {
 		}else {
 			return 0;
 		}
-	}else if (columnType == 1) {
+	}else {
 		if (strcmp(str1, str2) < 0) {
 			return -1;
 		}
@@ -157,13 +161,13 @@ int comparator(char* str1, char* str2) {
 }
 
 int* merge(int* input1, int size1, int* input2, int size2){
-  int AA[size1 + size2];
+  AA = (int*) realloc(AA, (size1 + size2) * sizeof(int));
   int i = 0;
   int j = 0;
 
   while(i < size1 && j < size2){
-	char* str1 = data[input1[i]].COI;
-	char* str2 = data[input2[j]].COI;
+	char* str1 = data[input1[i]]->COI;
+	char* str2 = data[input2[j]]->COI;
 	if(comparator(str1, str2) < 0){
       AA[i+j] = input1[i];
       i++;
@@ -192,12 +196,12 @@ int* merge(int* input1, int size1, int* input2, int size2){
 }
 
 int* mergeSort(int* indexes, int size){
-  if(size = 1){
+  if(size == 1){
     return indexes;
   }
 
-  int* A1[size/2]; 
-  int* A2[size-(size/2)];
+  int A1[size/2]; 
+  int A2[size-(size/2)];
 
   int i;
   for(i = 0; i < size/2; i++){
@@ -212,10 +216,14 @@ int* mergeSort(int* indexes, int size){
 
   return merge(SortedA1, size/2, SortedA2, (size-(size/2)));
 }
-*/
 
-void printData(int fd, Listing* data, int size){
-  
+void printData(int fd, char* headerRow, int numRows){
+  write(fd, headerRow, strlen(headerRow));
+  int i;
+  for(i = 0; i < numRows; i++){
+    write(fd, "\n", 1);
+    write(fd, data[indexArray[i]]->row, strlen(data[indexArray[i]]->row));
+  }
 }
 
 void printLL(Node* front){

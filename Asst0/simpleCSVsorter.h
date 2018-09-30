@@ -12,9 +12,9 @@ typedef struct Node {
 } Node;
 
 Node* front; //Linked List to count rows of entries
-
-Listing* data;
+Listing** data;
 int* indexArray;
+int* AA;
 int columnType; //0 for double, 1 for string
 
 void insertNode(Listing* input);
@@ -29,17 +29,14 @@ int numChars(char* string, char character);
 
 char* removeWhitespace(char* string);
 
-//int comparator(char* str1, char* str2);
+int comparator(char* str1, char* str2);
 
-//int* merge(int* input1, int size1, int* input2, int size2);
+int* merge(int* input1, int size1, int* input2, int size2);
 
-//int* mergeSort(int* indexes, int size);
+int* mergeSort(int* indexes, int size);
 
-void printData(int fd, Listing* data, int size);
+void printData(int fd, char* headerRow, int numRows);
 
 void printLL(Node* front);
 
 void printListing(Listing* data);
-
-//Suggestion: prototype a mergesort function
-//multisort function, mergesort that takes an array, and has a configurable sorting element
