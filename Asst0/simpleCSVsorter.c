@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include "simpleCSVsorter.h"
 
 int main(int argc, char** argv){
@@ -40,9 +39,8 @@ int main(int argc, char** argv){
 		free(line);
 	}
 
-	printLL(front);
+	//printLL(front);
 
-	/*
 	data = (Listing*)malloc(numRows*sizeof(Listing));
 
 	int i = numRows-1;
@@ -51,6 +49,18 @@ int main(int argc, char** argv){
 		Listing* temp = front;
 		front = front->next;
 		free(temp);
+	}
+
+	columnType = 0;
+	for (i = 0; i < numRows; i++) {
+		char* COItemp = data[i]->COI;
+		int j;
+		for (j = 0; j < strlen(COItemp); j++) {
+			if (isalpha(COItemp[i])) {
+				columnType = 1;
+				break;
+			}
+		}
 	}
 
 	indexArray = (int*)malloc(numRows*sizeof(int));
@@ -65,7 +75,6 @@ int main(int argc, char** argv){
 	for(i = 0; i < numRows; i++){
 		printf("%s\n", data[indexArray[i]]->row);
 	}
-	*/
-
+	
 	return 0;
 }
