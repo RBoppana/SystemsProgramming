@@ -31,6 +31,7 @@ int findHeader(char* headerString, char* columnName){
       currentIndex++;
     }
   }
+  free(headerString);
   return -1;
 }
 
@@ -64,7 +65,10 @@ int populateListing(int index, char* line, Listing* listing){
     listing->COI = NULL;
   } else {
     char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
-    if (!new) return -1;  
+    if (!new) {
+      free(temp);
+      return -1;
+    }  
     strcpy(new, col);
     char* trimmed = removeWhitespace(new);
     listing->COI = trimmed;
@@ -137,84 +141,47 @@ int comparator(char* str1, char* str2) {
   if (!str1 || !str2){
     return !str1 ? -1 : 1;
   }
-  if (columnType == 0) {
-		double num1 = atol(str1);
-		double num2 = atol(str2);
-		if (num1 < num2) {
-			return -1;
-		}else if (num1 > num2) {
-			return 1;
-		}else {
-			return 0;
-		}
-	}else {
-		if (strcmp(str1, str2) < 0) {
-			return -1;
-		}
-		else if (strcmp(str1, str2) > 0) {
-			return 1;
-		}
-		else {
-			return 0;
-		}
-	}
+  if (columnType == 0){ //double
+    double num1 = atol(str1);
+    double num2 = atol(str2);
+    if (num1 < num2) return -1;
+    if (num1 > num2) return 1;
+    return 0;
+  } else { //string
+    return strcmp(str1, str2);
+  }
 }
 
-int* merge(int* input1, int size1, int* input2, int size2){
-  AA = (int*) realloc(AA, (size1 + size2) * sizeof(int));
-  int i = 0;
-  int j = 0;
-
-  while(i < size1 && j < size2){
-	char* str1 = data[input1[i]]->COI;
-	char* str2 = data[input2[j]]->COI;
-	if(comparator(str1, str2) < 0){
-      AA[i+j] = input1[i];
+int merge(int* indexes, int first, int middle, int last){
+  int i = first, j = middle + 1, k;
+  int* temp = (int*) malloc((last - first + 1) * sizeof(int));
+  if(!temp) return -1;
+  for (k = 0; k <= (last - first); k++){
+    if (j > last || (i <= middle && comparator(data[indexes[i]]->COI, data[indexes[j]]->COI) <= 0)){
+      temp[k] = indexes[i];
       i++;
-    }else if(comparator(str1, str2) > 0){
-      AA[i+j] = input2[j];
-      j++;
-    }else if(comparator(str1, str2) == 0){
-      AA[i+j] = input1[i];
-      i++;
-      AA[i+j] = input2[j];
+    } else { //value in j is greater or i has run out
+      temp[k] = indexes[j];
       j++;
     }
   }
-
-  while (i < size1) { //copy remaining elements in i
-	  AA[i + j] = input1[i];
-	  i++;
+  
+  for (k = 0; k <= (last - first); k++){ //Copy temp back into array
+    indexes[k + first] = temp[k];
   }
-
-  while (j < size2) { //copy remaining elements in j
-	  AA[i + j] = input2[j];
-	  j++;
-  }
-
-  return AA;
+  free(temp);
+  return 0;
 }
 
-int* mergeSort(int* indexes, int size){
-  if(size == 1){
-    return indexes;
+int mergeSort(int* indexes, int first, int last){
+  if (first < last){
+    int middle = (first + last) / 2;
+    if (mergeSort(indexes, first, middle) != 0) return -1;
+    if (mergeSort(indexes, middle + 1, last) != 0) return -1;
+    if (merge(indexes, first, middle, last) != 0) return -1;
+    return 0;
   }
-
-  int A1[size/2]; 
-  int A2[size-(size/2)];
-
-  int i;
-  for(i = 0; i < size/2; i++){
-    A1[i] = indexes[i];
-  }
-  for(i = 0; i < (size-(size/2)); i++){
-    A2[i] = indexes[(size/2)+i];
-  }
-  
-  int* SortedA1 = mergeSort(A1, size/2);
-  int* SortedA2 = mergeSort(A2, (size-(size/2)));
-
-  return merge(SortedA1, size/2, SortedA2, (size-(size/2)));
+  return 0;
 }
 
 void printData(int fd, char* headerRow, int numRows){
@@ -233,6 +200,35 @@ void printLL(Node* front){
   }
 }
 
+void printArray(Listing** data, int numRows){
+  int i;
+  for (i = 0; i < numRows; i++){
+    printListing(data[i]);
+  }
+}
+
 void printListing(Listing* data){
   fprintf(stdout, "Column Value: |%s|, Row string: |%s|\n", data->COI, data->row);
+}
+
+void freeLL(Node* front){
+  while (front != NULL){
+    Node* temp = front;
+    front = front->next;
+    freeListing(temp->element);
+    free(temp);
+  }
+}
+
+void freeArray(Listing** data, int numRows){
+  int i;
+  for (i = 0; i < numRows; i++){
+    freeListing(data[i]);
+  }
+}
+
+void freeListing(Listing* data){
+  free(data->COI);
+  free(data->row);
+  free(data);
 }

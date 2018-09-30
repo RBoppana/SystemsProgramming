@@ -14,7 +14,6 @@ typedef struct Node {
 Node* front; //Linked List to count rows of entries
 Listing** data;
 int* indexArray;
-int* AA;
 int columnType; //0 for double, 1 for string
 
 void insertNode(Listing* input);
@@ -31,12 +30,20 @@ char* removeWhitespace(char* string);
 
 int comparator(char* str1, char* str2);
 
-int* merge(int* input1, int size1, int* input2, int size2);
+int merge(int* indexes, int first, int middle, int last);
 
-int* mergeSort(int* indexes, int size);
+int mergeSort(int* indexes, int first, int last);
 
 void printData(int fd, char* headerRow, int numRows);
 
 void printLL(Node* front);
 
+void printArray(Listing** data, int numRows);
+
 void printListing(Listing* data);
+
+void freeLL(Node* front);
+
+void freeArray(Listing** data, int numRows);
+
+void freeListing(Listing* data);

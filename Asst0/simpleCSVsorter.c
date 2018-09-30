@@ -19,9 +19,18 @@ int main(int argc, char** argv){
 	  fprintf(stderr, "Header row missing.\n");
 	  return -1;
 	}
+	char* headerRow = (char*) malloc((strlen(headerString) + 1) * sizeof(char)); //Keeps header string intact
+	if (!headerRow){
+	  free(headerString);
+	  fprintf(stderr, "Out of memory.\n");
+	  return -1;
+	}
+	strcpy(headerRow, headerString);
 	int index = findHeader(headerString, argv[2]);
 	if (index < 0){
 	  fprintf(stderr, "Column name not found.\n");
+	  free(headerString);
+	  free(headerRow);
 	  return -1;
 	}
 	
@@ -30,19 +39,39 @@ int main(int argc, char** argv){
 	char* line;
 	while((line = readLine(0))){
 	  Listing* temp = (Listing*)malloc(sizeof(Listing));
+	  if (!temp) {
+	    fprintf(stderr, "Out of memory.\n");
+	    free(line);
+	    freeLL(front);
+	    free(headerString);
+	    free(headerRow);
+	    return -1;
+	  }
 	  if (populateListing(index, line, temp) < 0){
-	      fprintf(stderr, "Error parsing rows.\n");
-	      return -1;
-	    }
-		insertNode(temp);
-		numRows++;
-		free(line);
+	    fprintf(stderr, "Error parsing rows.\n");
+	    free(temp);
+	    free(line);
+	    free(headerString);
+	    free(headerRow);
+	    freeLL(front);
+	    return -1;
+	  }
+	  insertNode(temp);
+	  numRows++;
+	  free(line);
 	}
 
 	//printLL(front);
 	
 	//Put Linked List into array of pointers
 	data = (Listing**)malloc(numRows*sizeof(Listing*));
+	if (!data){
+	  fprintf(stderr, "Out of memory.\n");
+	  free(headerString);
+	  free(headerRow);
+	  freeLL(front);
+	  return -1;
+	}
 	int i = numRows-1;
 	while(front != NULL){
 	  data[i--] = front->element;
@@ -50,6 +79,8 @@ int main(int argc, char** argv){
 		front = front->next;
 		free(temp);
 	}
+
+	//printArray(data, numRows);
 	
 	//Determine datatype of column
 	columnType = 0;
@@ -57,7 +88,7 @@ int main(int argc, char** argv){
 		char* COItemp = data[i]->COI;
 		int j;
 		for (j = 0; j < strlen(COItemp); j++) {
-			if (isalpha(COItemp[i])) {
+			if (isdigit(COItemp[j]) == 0 && COItemp[j] == '.') {
 				columnType = 1;
 				break;
 			}
@@ -66,18 +97,26 @@ int main(int argc, char** argv){
 	
 	//Create int array for sorting
 	indexArray = (int*)malloc(numRows*sizeof(int));
-	for(i = 0; i < numRows; i++){
+	for (i = 0; i < numRows; i++){
 		indexArray[i] = i;
 	}
-
-	//Sort!
-	AA = malloc(1);
-	indexArray = mergeSort(indexArray, numRows);
-
-	//Output data
-	printData(1, headerString, numRows);
 	
+	//Sort!
+	if (mergeSort(indexArray, 0, numRows - 1) != 0){
+	  fprintf(stderr, "Error sorting.\n");
+	  free(headerString);
+	  free(indexArray);
+	  freeArray(data, numRows);
+	  return -1;
+	}
+	
+	//Output data
+	printData(1, headerRow, numRows);
+	
+	//Freedom at last
 	free(headerString);
+	free(indexArray);
+	freeArray(data, numRows);
 
 	return 0;
 }
