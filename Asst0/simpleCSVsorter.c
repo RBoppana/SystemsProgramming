@@ -13,31 +13,36 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
+	//Header line processing
 	char* headerString = readLine(0);
-	if (*headerString == '\0'){
+	if (!headerString){
 	  fprintf(stderr, "Header row missing.\n");
 	  return -1;
 	}
-
 	int index = findHeader(headerString, argv[2]);
 	if (index < 0){
 	  fprintf(stderr, "Column name not found.\n");
 	  return -1;
 	}
-
-	fprintf(stdout, "Index: %d\n", index);
 	free(headerString);
-	/*
+	
+	//Create linked list of rows
 	int numRows = 0;
 	char* line;
 	while((line = readLine(0))){
-	  char* line = readLine(0);
 	  Listing* temp = (Listing*)malloc(sizeof(Listing));
-		populateListing(nthComma, readLine(0), temp);
-		front = insertNode(temp);
+	  if (populateListing(index, line, temp) < 0){
+	      fprintf(stderr, "Error parsing rows.\n");
+	      return -1;
+	    }
+		insertNode(temp);
 		numRows++;
+		free(line);
 	}
 
+	printLL(front);
+
+	/*
 	data = (Listing*)malloc(numRows*sizeof(Listing));
 
 	int i = numRows-1;

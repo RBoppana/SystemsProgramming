@@ -34,11 +34,13 @@ int findHeader(char* headerString, char* columnName){
 }
 
 int populateListing(int index, char* line, Listing* listing){
+  //Copy entire string to listing
   char* temp = (char*) malloc((strlen(line) + 1) * sizeof(char));
   if (!temp) return -1;
   strcpy(temp, line);
   listing->row = temp;
   
+  //Get string value of column of interest
   char col[strlen(line) + 1];
   col[0] = '\0';
   int numQuotes = 0;
@@ -50,15 +52,21 @@ int populateListing(int index, char* line, Listing* listing){
     }
     numQuotes += numChars(token, '"');
     if (numQuotes % 2 == 1){
-      strcat(col, ",");
+      if (currentIndex == index){
+	strcat(col, ",");
+      }
     } else {
       currentIndex++;
     }
   }
-  char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
-  if (!new) return -1;  
-  strcpy(new, col);
-  listing->COI = new;
+  if (col[0] = '\0'){
+    listing->COI = NULL;
+  } else {
+    char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
+    if (!new) return -1;  
+    strcpy(new, col);
+    listing->COI = new;
+  }
   
   return 0;
 }
@@ -78,6 +86,10 @@ char* readLine(int fd){
       if (!string) return string;
     }
   }
+  if (length == 0 && current != '\n'){
+    free(string);
+    return NULL;
+  } 
   string[length] = '\0';
   length++;
   return realloc(string, length * sizeof(char));
@@ -180,7 +192,13 @@ void printData(int fd, Listing* data, int size){
   
 }
 
+void printLL(Node* front){
+  while (front != NULL){
+    printListing(front->element);
+    front = front->next;
+  }
+}
+
 void printListing(Listing* data){
-  fprintf(stdout, "%s\n", data->row);
-  fprintf(stdout, "%s\n", data->COI);
+  fprintf(stdout, "Column Value: |%s|, Row string: |%s|\n", data->COI, data->row);
 }

@@ -11,7 +11,7 @@ typedef struct Node {
 	struct Node* next;
 } Node;
 
-Node* front; //Link List to count rows of entries
+Node* front; //Linked List to count rows of entries
 
 Listing* data;
 int* indexArray;
@@ -37,6 +37,10 @@ int numChars(char* string, char character);
 //int* mergeSort(int* indexes, int size);
 
 void printData(int fd, Listing* data, int size);
+
+void printLL(Node* front);
+
+void printListing(Listing* data);
 
 //Suggestion: prototype a mergesort function
 //multisort function, mergesort that takes an array, and has a configurable sorting element
