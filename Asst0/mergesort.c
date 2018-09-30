@@ -13,15 +13,13 @@ void insertNode(Listing* input){
 }
 
 int findHeader(char* headerString, char* columnName){
-  printf("%s\n", headerString);
   char temp[strlen(headerString) + 1]; //For storing the current column value
   temp[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
-  char* token 
-  while (end = strchr(start, ',')){
+  char* token;
+  while ((token = strsep(&headerString, ","))){
     strcat(temp, token);
-    printf("token: %s\ttemp: %s \n", token, temp);
     numQuotes += numChars(token, '"');
     if (numQuotes % 2 == 1){ //Check if comma is part of string
       strcat(temp, ",");
@@ -31,7 +29,6 @@ int findHeader(char* headerString, char* columnName){
       temp[0] = '\0'; //Set string to empty
       currentIndex++;
     }
-    token = strtok(NULL, ",");
   }
   return -1;
 }
@@ -46,8 +43,8 @@ int populateListing(int index, char* line, Listing* listing){
   col[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
-  char* token = strtok(line, ",");
-  while (token != NULL){
+  char* token;
+  while ((token = strsep(&line, ","))){
     if (currentIndex == index){
       strcat(col, token);
     }
@@ -57,13 +54,12 @@ int populateListing(int index, char* line, Listing* listing){
     } else {
       currentIndex++;
     }
-    token = strtok(NULL, ",");
   }
   char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
   if (!new) return -1;  
   strcpy(new, col);
   listing->COI = new;
-
+  
   return 0;
 }
 
@@ -73,8 +69,7 @@ char* readLine(int fd){
   if (!string) return string;
   size_t length = 0;
   char current;
-  read(fd, &current, 1);
-  while (current != EOF && current != '\n'){
+  while (read(fd, &current, 1) != 0 && current != '\n'){
     string[length] = current;
     length++;
     if (length == capacity){
@@ -82,7 +77,6 @@ char* readLine(int fd){
       string = realloc(string, capacity * sizeof(char));
       if (!string) return string;
     }
-    read(fd, &current, 1);
   }
   string[length] = '\0';
   length++;
@@ -99,15 +93,7 @@ int numChars(char* string, char character){
   }
   return count;
 }
-
-
-//Sets the delimiter to null and return a pointer to the character after
-char* stringToken(char* string, char token){
-  char* ptr = strchr(string, token);
-  *ptr = '\0';
-  return ;
-}
-
+/*
 int comparator(char* str1, char* str2) {
 	if (columnType == doubles) {
 		double num1 = atol(str1);
@@ -133,13 +119,13 @@ int comparator(char* str1, char* str2) {
 }
 
 int* merge(int* input1, int size1, int* input2, int size2){
-  int* AA[size1 + size2];
+  int AA[size1 + size2];
   int i = 0;
   int j = 0;
 
   while(i < size1 && j < size2){
-	char* str1 = data[input1[i]]->COI;
-	char* str2 = data[input2[j]]->COI;
+	char* str1 = data[input1[i]].COI;
+	char* str2 = data[input2[j]].COI;
 	if(comparator(str1, str2) < 0){
       AA[i+j] = input1[i];
       i++;
@@ -188,6 +174,7 @@ int* mergeSort(int* indexes, int size){
 
   return merge(SortedA1, size/2, SortedA2, (size-(size/2)));
 }
+*/
 
 void printData(int fd, Listing* data, int size){
   

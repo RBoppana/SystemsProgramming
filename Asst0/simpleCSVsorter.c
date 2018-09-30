@@ -14,11 +14,11 @@ int main(int argc, char** argv){
 	}
 
 	char* headerString = readLine(0);
-	if (!headerString){
+	if (*headerString == '\0'){
 	  fprintf(stderr, "Header row missing.\n");
 	  return -1;
 	}
-	printf("Column name: %s\n", argv[2]);
+
 	int index = findHeader(headerString, argv[2]);
 	if (index < 0){
 	  fprintf(stderr, "Column name not found.\n");
@@ -29,8 +29,10 @@ int main(int argc, char** argv){
 	free(headerString);
 	/*
 	int numRows = 0;
-	while(!feof(stdin)){
-		Listing* temp = (Listing*)malloc(sizeof(Listing));
+	char* line;
+	while((line = readLine(0))){
+	  char* line = readLine(0);
+	  Listing* temp = (Listing*)malloc(sizeof(Listing));
 		populateListing(nthComma, readLine(0), temp);
 		front = insertNode(temp);
 		numRows++;
