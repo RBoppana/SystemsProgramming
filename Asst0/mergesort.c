@@ -71,6 +71,19 @@ int populateListing(int index, char* line, Listing* listing){
     }  
     strcpy(new, col);
     char* trimmed = removeWhitespace(new);
+
+    if (trimmed[0] == '"'){ //Crop off quotes
+      char* noQuotes = (char*) malloc((strlen(trimmed) - 1) * sizeof(char));
+      if (!noQuotes){
+	free(temp);
+	free(trimmed);
+	return -1;
+      }
+      trimmed[strlen(trimmed) - 1] = '\0';
+      strcpy(noQuotes, &(trimmed[1]));
+      free(trimmed);
+      trimmed = removeWhitespace(noQuotes);
+    } 
     listing->COI = trimmed;
   }
   
@@ -138,11 +151,11 @@ int comparator(char* str1, char* str2) {
     return 0;
   }
   if (!str1 || !str2){
-    return !str1 ? -1 : 1;
+    return (!str1) ? -1 : 1;
   }
   if (columnType == 0){ //double
-    double num1 = atol(str1);
-    double num2 = atol(str2);
+    double num1 = atof(str1);
+    double num2 = atof(str2);
     if (num1 < num2) return -1;
     if (num1 > num2) return 1;
     return 0;
@@ -183,13 +196,11 @@ int mergeSort(int* indexes, int first, int last){
   return 0;
 }
 
-void printData(int fd, char* headerRow, int numRows){
-  write(fd, headerRow, strlen(headerRow));
+void printData(FILE* fp, char* headerRow, int numRows){
+  fprintf(fp, headerRow);
   int i;
   for(i = 0; i < numRows; i++){
-    write(fd, "\n", 1);
-    write(fd, data[indexArray[i]]->COI, strlen(data[indexArray[i]]->COI));
-    //write(fd, data[indexArray[i]]->row, strlen(data[indexArray[i]]->row));
+    fprintf(fp, "\n%s", data[indexArray[i]]->row);
   }
 }
 

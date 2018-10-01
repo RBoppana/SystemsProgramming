@@ -86,6 +86,7 @@ int main(int argc, char** argv){
 	columnType = 0;
 	for (i = 0; i < numRows; i++) {
 		char* COItemp = data[i]->COI;
+		if (!COItemp) continue;
 		int j, done = 0;
 		for (j = 0; j < strlen(COItemp); j++) {
 			if (isdigit(COItemp[j]) == 0 && COItemp[j] != '.') {
@@ -96,7 +97,6 @@ int main(int argc, char** argv){
 		}
 		if (done == 1) break;
 	}
-	fprintf(stdout, "Column type: %d\n", columnType);
 	
 	//Create int array for sorting
 	indexArray = (int*)malloc(numRows*sizeof(int));
@@ -114,7 +114,7 @@ int main(int argc, char** argv){
 	}
 	
 	//Output data
-	printData(1, headerRow, numRows);
+	printData(stdout, headerRow, numRows);
 	
 	//Freedom at last
 	free(headerString);

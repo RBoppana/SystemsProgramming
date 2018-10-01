@@ -34,7 +34,7 @@ int merge(int* indexes, int first, int middle, int last);
 
 int mergeSort(int* indexes, int first, int last);
 
-void printData(int fd, char* headerRow, int numRows);
+void printData(FILE* fp, char* headerRow, int numRows);
 
 void printLL(Node* front);
 
