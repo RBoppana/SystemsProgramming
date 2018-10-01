@@ -86,14 +86,17 @@ int main(int argc, char** argv){
 	columnType = 0;
 	for (i = 0; i < numRows; i++) {
 		char* COItemp = data[i]->COI;
-		int j;
+		int j, done = 0;
 		for (j = 0; j < strlen(COItemp); j++) {
-			if (isdigit(COItemp[j]) == 0 && COItemp[j] == '.') {
+			if (isdigit(COItemp[j]) == 0 && COItemp[j] != '.') {
 				columnType = 1;
+				done = 1;
 				break;
 			}
 		}
+		if (done == 1) break;
 	}
+	fprintf(stdout, "Column type: %d\n", columnType);
 	
 	//Create int array for sorting
 	indexArray = (int*)malloc(numRows*sizeof(int));

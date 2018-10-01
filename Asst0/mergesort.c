@@ -118,8 +118,7 @@ char* removeWhitespace(char* string){
   for (i = 0; i < strlen(string); i++){ //Preceding whitespace
     if (isspace(string[i])) continue;
     start = i;
-    break;
-    
+    break; 
   }
   for (i = strlen(string) - 1; i >= 0; i--){ //Proceding whitespace
     if (isspace(string[i])) continue;
@@ -128,8 +127,8 @@ char* removeWhitespace(char* string){
   }
   char* result = (char*) malloc((end - start + 2)* sizeof(char));
   if (!result) return result;
-  strcpy(result, &string[start]);
-  result[end - start + 1] = '\0';
+  string[end + 1] = '\0';
+  strcpy(result, &(string[start]));
   free(string);
   return result;
 }
@@ -189,7 +188,8 @@ void printData(int fd, char* headerRow, int numRows){
   int i;
   for(i = 0; i < numRows; i++){
     write(fd, "\n", 1);
-    write(fd, data[indexArray[i]]->row, strlen(data[indexArray[i]]->row));
+    write(fd, data[indexArray[i]]->COI, strlen(data[indexArray[i]]->COI));
+    //write(fd, data[indexArray[i]]->row, strlen(data[indexArray[i]]->row));
   }
 }
 
