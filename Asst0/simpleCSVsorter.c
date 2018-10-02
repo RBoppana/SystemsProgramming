@@ -89,7 +89,7 @@ int main(int argc, char** argv){
 		if (!COItemp) continue;
 		int j, done = 0;
 		for (j = 0; j < strlen(COItemp); j++) {
-			if (isdigit(COItemp[j]) == 0 && COItemp[j] != '.') {
+			if (isdigit(COItemp[j]) == 0 && COItemp[j] != '.' && COItemp[j] != '-') {
 				columnType = 1;
 				done = 1;
 				break;
