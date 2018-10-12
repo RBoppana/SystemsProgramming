@@ -2,14 +2,34 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <dirent.h>
 #include "simpleCSVsorter.h"
 
 int main(int argc, char** argv){
-	if(argc != 3){
+	if(argc < 3 || argc > 7){
 	  fprintf(stderr, "Please specify the correct number of arguments.\n");
 		return -1;
 	} else if(strcmp(argv[1], "-c") != 0){
 	  fprintf(stderr, "Unrecognized parameter.\n");
+		return -1;
+	}
+
+	struct dirent* de;
+
+	if(strcmp(argv[3], "-d")) == 0){
+		DIR* inputDir = opendir(argv[4]);
+	}else{
+		DIR* inputDir = opendir(".");
+	}
+
+	if(strcmp(argv[5], "-o")) == 0){
+		DIR* inputDir = opendir(argv[6]);
+	}else{
+		DIR* inputDir = opendir(".");
+	}
+
+	if(inputDir == NULL || outputDir == NULL){
+		fprintf(stderr, "Incompatible Directory")
 		return -1;
 	}
 
