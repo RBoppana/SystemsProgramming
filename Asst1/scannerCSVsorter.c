@@ -13,27 +13,31 @@ int main(int argc, char** argv){
 	  fprintf(stderr, "Unrecognized parameter.\n");
 		return -1;
 	}
-
-	/*
+	
+	//Directory Traversal
 	struct dirent* de;
+	DIR* inputDir;
+	DIR* outputDir;
 
-	if(strcmp(argv[3], "-d") == 0){
-		DIR* inputDir = opendir(argv[4]);
+	if(argc > 3 && strcmp(argv[3], "-d") == 0){
+		inputDir = opendir(argv[4]);
 	}else{
-		DIR* inputDir = opendir(".");
+		inputDir = opendir(".");
 	}
 
-	if(strcmp(argv[5], "-o") == 0){
-		DIR* inputDir = opendir(argv[6]);
+	if(argc > 5 && strcmp(argv[5], "-o") == 0){
+		outputDir = opendir(argv[6]);
 	}else{
-		DIR* inputDir = opendir(".");
+		outputDir = opendir(".");
 	}
 
-	if(inputDir == NULL || outputDir == NULL){
-		fprintf(stderr, "Incompatible Directory")
+	if(!inputDir || !outputDir){
+		fprintf(stderr, "Incompatible Directories");
 		return -1;
 	}
-	*/
+
+	//closedir(inputDir);
+	//closedir(outputDir);
 
 	//Header line processing
 	char* headerString = readLine(0);
