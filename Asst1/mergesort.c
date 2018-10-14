@@ -14,10 +14,11 @@ char* traverseDir(DIR* input) {
 			if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
 				continue;
 			next = entry->d_name;
+			//fork some shit?
 			traverseDir(next);
 		} else if(de->d_type == DT_REG){
 			if (isCSV(d_name)) {
-				//fork some shit?
+				//sort it?
 			}
 		}
 	}
