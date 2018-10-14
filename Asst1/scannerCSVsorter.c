@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <dirent.h>
-#include "simpleCSVsorter.h"
+#include "scannerCSVsorter.h"
 
 int main(int argc, char** argv){
 	if(argc < 3 || argc > 7){
@@ -14,15 +14,16 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
+	/*
 	struct dirent* de;
 
-	if(strcmp(argv[3], "-d")) == 0){
+	if(strcmp(argv[3], "-d") == 0){
 		DIR* inputDir = opendir(argv[4]);
 	}else{
 		DIR* inputDir = opendir(".");
 	}
 
-	if(strcmp(argv[5], "-o")) == 0){
+	if(strcmp(argv[5], "-o") == 0){
 		DIR* inputDir = opendir(argv[6]);
 	}else{
 		DIR* inputDir = opendir(".");
@@ -32,6 +33,7 @@ int main(int argc, char** argv){
 		fprintf(stderr, "Incompatible Directory")
 		return -1;
 	}
+	*/
 
 	//Header line processing
 	char* headerString = readLine(0);

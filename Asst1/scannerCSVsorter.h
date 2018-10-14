@@ -15,6 +15,7 @@ Node* front; //Linked List to count rows of entries
 Listing** data;
 int* indexArray;
 int columnType; //0 for double, 1 for string
+int numColumns;
 
 void insertNode(Listing* input);
 

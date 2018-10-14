@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
-#include "simpleCSVsorter.h"
+#include "scannerCSVsorter.h"
 
 void insertNode(Listing* input){
 	Node* newNode = (Node*) malloc(sizeof(Node));
@@ -18,6 +18,7 @@ int findHeader(char* headerString, char* columnName){
   temp[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
+  int targetIndex = -1;
   char* token;
   while ((token = strsep(&headerString, ","))){
     strcat(temp, token);
@@ -25,14 +26,15 @@ int findHeader(char* headerString, char* columnName){
     if (numQuotes % 2 == 1){ //Check if comma is part of string
       strcat(temp, ",");
     } else if (strcmp(temp, columnName) == 0) { //If not, check the name
-      return currentIndex;
+      targetIndex = currentIndex;
+      currentIndex++;
     } else {
       temp[0] = '\0'; //Set string to empty
       currentIndex++;
     }
   }
-  free(headerString);
-  return -1;
+  numColumns = currentIndex;
+  return targetIndex;
 }
 
 int populateListing(int index, char* line, Listing* listing){
@@ -48,18 +50,21 @@ int populateListing(int index, char* line, Listing* listing){
   int numQuotes = 0;
   int currentIndex = 0;
   char* token;
-  while ((token = strsep(&line, ","))){
+  while ((token = strsep(&line, ","))){ //Parse through commas
     if (currentIndex == index){
       strcat(col, token);
     }
     numQuotes += numChars(token, '"');
-    if (numQuotes % 2 == 1){
+    if (numQuotes % 2 == 1){ //Check if comma is part of string
       if (currentIndex == index){
 	strcat(col, ",");
       }
     } else {
       currentIndex++;
     }
+  }
+  if (currentIndex != numColumns){ //Check number of columns match
+    return -1;
   }
   if (col[0] == '\0'){
     listing->COI = NULL;
@@ -70,7 +75,7 @@ int populateListing(int index, char* line, Listing* listing){
       return -1;
     }  
     strcpy(new, col);
-    char* trimmed = removeWhitespace(new);
+    char* trimmed = removeWhitespace(new); //Remove whitespace outside quotes
 
     if (trimmed[0] == '"'){ //Crop off quotes
       char* noQuotes = (char*) malloc((strlen(trimmed) - 1) * sizeof(char));
@@ -82,7 +87,7 @@ int populateListing(int index, char* line, Listing* listing){
       trimmed[strlen(trimmed) - 1] = '\0';
       strcpy(noQuotes, &(trimmed[1]));
       free(trimmed);
-      trimmed = removeWhitespace(noQuotes);
+      trimmed = removeWhitespace(noQuotes); //Remove whitespace inside quotes
     } 
     listing->COI = trimmed;
   }
