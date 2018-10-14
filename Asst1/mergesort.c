@@ -5,6 +5,41 @@
 #include <ctype.h>
 #include "scannerCSVsorter.h"
 
+char* traverseDir(DIR* input) {
+	struct dirent* de;
+
+	while (!(de = readdir(input))) {
+		if (de->d_type == DT_DIR) {
+			char* path;
+			if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+				continue;
+			next = entry->d_name;
+			traverseDir(next);
+		} else if(de->d_type == DT_REG){
+			if (isCSV(d_name)) {
+				//fork some shit?
+			}
+		}
+	}
+}
+
+int isCSV(char* name) {
+	if (strcmp(".csv", last4(name)) == 0 || strcmp(".CSV", last4(name)) == 0) {
+		return 1;
+	}
+	return 0;
+}
+
+char* last4(char* name) {
+	char result[4];
+	int i;
+	int j = 3;
+	for (i = strlen(name) - 1; i >= 0; i--) {
+		result[j--] = name[i];
+	}
+	return result;
+}
+
 void insertNode(Listing* input){
 	Node* newNode = (Node*) malloc(sizeof(Node));
 	newNode->element = input;

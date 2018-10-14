@@ -15,7 +15,6 @@ int main(int argc, char** argv){
 	}
 	
 	//Directory Traversal
-	struct dirent* de;
 	DIR* inputDir;
 	DIR* outputDir;
 
@@ -36,8 +35,11 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
-	//closedir(inputDir);
-	//closedir(outputDir);
+	char* fileName = traverseDir(inputDir);
+
+	if (strcmp(fileName, "done") == 0) {
+		//print process data to sdout and return
+	}
 
 	//Header line processing
 	char* headerString = readLine(0);
@@ -146,6 +148,9 @@ int main(int argc, char** argv){
 	free(headerString);
 	free(indexArray);
 	freeArray(data, numRows);
+
+	closedir(inputDir);
+	closedir(outputDir);
 
 	return 0;
 }
