@@ -49,8 +49,8 @@ void freeArray(Listing** data, int numRows);
 
 void freeListing(Listing* data);
 
-char* traverseDir(DIR* input);
+//char* traverseDir(DIR* input);
 
 int isCSV(char* name);
 
-char* last4(char* name);
+char* getExtension(char* name);

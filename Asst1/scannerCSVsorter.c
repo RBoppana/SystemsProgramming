@@ -6,40 +6,46 @@
 #include "scannerCSVsorter.h"
 
 int main(int argc, char** argv){
-	if(argc < 3 || argc > 7){
+        if (!(argc == 3 || argc == 5 || argc == 7)){
 	  fprintf(stderr, "Please specify the correct number of arguments.\n");
+	  fprintf(stderr, "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n");
 		return -1;
-	} else if(strcmp(argv[1], "-c") != 0){
-	  fprintf(stderr, "Unrecognized parameter.\n");
+	} else if (strcmp(argv[1], "-c") != 0){
+	  fprintf(stderr, "Unrecognized flag.\n");
 		return -1;
 	}
 	
-	//Directory Traversal
+	//Handle flags
 	DIR* inputDir;
+	int inputSet = 0;
 	DIR* outputDir;
-
-	if(argc > 3 && strcmp(argv[3], "-d") == 0){
-		inputDir = opendir(argv[4]);
-	}else{
-		inputDir = opendir(".");
+	int outputSet = 0;
+	int i = 0;
+	for (i = 0; i < (argc-3)/2; i++){
+	  int flag = 3 + (2 * i);
+	  if (strcmp(argv[flag], "-d") == 0){
+	    inputDir = opendir(argv[flag + 1]);
+	    inputSet = 1;
+	  } else if (strcmp(argv[flag], "-o") == 0){
+	    outputDir = opendir(argv[flag + 1]);
+	    outputSet = 1;
+	  } else {
+	    fprintf(stderr, "Unrecognized flag.\n");
+	    return -1;
+	  }
+	}
+	if (inputSet != 1) inputDir = opendir(".");
+	if (outputSet != 1) outputDir = opendir(".");
+	if (!inputDir || !outputDir){
+	  fprintf(stderr, "Directory not found");
+	  return -1;
 	}
 
-	if(argc > 5 && strcmp(argv[5], "-o") == 0){
-		outputDir = opendir(argv[6]);
-	}else{
-		outputDir = opendir(".");
-	}
+	//char* fileName = traverseDir(inputDir);
 
-	if(!inputDir || !outputDir){
-		fprintf(stderr, "Incompatible Directories");
-		return -1;
-	}
-
-	char* fileName = traverseDir(inputDir);
-
-	if (strcmp(fileName, "done") == 0) {
+	//if (strcmp(fileName, "done") == 0) {
 		//print process data to sdout and return
-	}
+	//}
 
 	//Header line processing
 	char* headerString = readLine(0);
@@ -100,7 +106,7 @@ int main(int argc, char** argv){
 	  freeLL(front);
 	  return -1;
 	}
-	int i = numRows-1;
+	i = numRows-1;
 	while(front != NULL){
 	  data[i--] = front->element;
 		Node* temp = front;
