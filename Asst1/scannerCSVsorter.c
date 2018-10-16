@@ -8,7 +8,7 @@
 #include "scannerCSVsorter.h"
 
 int traverseDir(DIR* directory);
-int sortCSV(int inputFD, int outputFD);
+int sortCSV(int inputFD, int outputFD, char* columnName);
 
 int main(int argc, char** argv){
         if (!(argc == 3 || argc == 5 || argc == 7)){
@@ -47,7 +47,9 @@ int main(int argc, char** argv){
 	}
 
 	write(0, "Initial PID: ", 13);
-	write(0, itoa(getpid()), strlen(itoa(getpid())));
+	char num[10];
+	sprintf(num, "%d", getpid());
+	write(0, num, strlen(num));
 	write(0, "\n", 1);
 
 	//char* fileName = traverseDir(inputDir);
@@ -55,28 +57,36 @@ int main(int argc, char** argv){
 	//if (strcmp(fileName, "done") == 0) {
 		//print process data to sdout and return
 	//}
+
+	return 0;
 }
 
 int traverse(DIR* directory){
-  int totalProcs
+  int totalProcs = 0;
   struct dirent* de;
-  while(de = readdir(directory)){
+  while((de = readdir(directory))){
     if (de->d_type == DT_DIR){
-      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
+      if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0){
 	continue;
       }
-      totalProcs += traverse(opendir(de->d_name));
-    } else if (de->d_type == DT_REG){
-      //check CSV, sortCSV
+      int recursiveProcs = traverse(opendir(de->d_name));
+      if (recursiveProcs == -1) return -1;
+      totalProcs += recursiveProcs;
+    } else if (de->d_type == DT_REG && isCSV(de->d_name) == 1){
       totalProcs++;
-    } else {
-      continue;
+      int PID = fork();
+      if (PID == -1) return -1;
+      if (PID == 0){ //child
+	//sort stuff
+      } else {
+	wait();
+      }
     }
   }
   return totalProcs;
 }
 
-int sortCSV(int inputFD, int outputFD){
+int sortCSV(int inputFD, int outputFD, char* columnName){
 	//Header line processing
 	char* headerString = readLine(inputFD);
 	if (!headerString){
@@ -90,7 +100,7 @@ int sortCSV(int inputFD, int outputFD){
 	  return -1;
 	}
 	strcpy(headerRow, headerString);
-	int index = findHeader(headerString, argv[2]);
+	int index = findHeader(headerString, columnName);
 	if (index < 0){
 	  fprintf(stderr, "Column name not found.\n");
 	  free(headerString);
@@ -136,7 +146,7 @@ int sortCSV(int inputFD, int outputFD){
 	  freeLL(front);
 	  return -1;
 	}
-	i = numRows-1;
+	int i = numRows-1;
 	while(front != NULL){
 	  data[i--] = front->element;
 		Node* temp = front;
@@ -185,9 +195,6 @@ int sortCSV(int inputFD, int outputFD){
 	free(headerString);
 	free(indexArray);
 	freeArray(data, numRows);
-
-	closedir(inputDir);
-	closedir(outputDir);
 
 	return 0;
 }
