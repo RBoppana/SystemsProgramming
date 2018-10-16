@@ -1,9 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <sys/types.h>
 #include "scannerCSVsorter.h"
+
+int traverseDir(DIR* directory);
+int sortCSV(int inputFD, int outputFD);
 
 int main(int argc, char** argv){
         if (!(argc == 3 || argc == 5 || argc == 7)){
@@ -41,14 +46,39 @@ int main(int argc, char** argv){
 	  return -1;
 	}
 
+	write(0, "Initial PID: ", 13);
+	write(0, itoa(getpid()), strlen(itoa(getpid())));
+	write(0, "\n", 1);
+
 	//char* fileName = traverseDir(inputDir);
 
 	//if (strcmp(fileName, "done") == 0) {
 		//print process data to sdout and return
 	//}
+}
 
+int traverse(DIR* directory){
+  int totalProcs
+  struct dirent* de;
+  while(de = readdir(directory)){
+    if (de->d_type == DT_DIR){
+      if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0){
+	continue;
+      }
+      totalProcs += traverse(opendir(de->d_name));
+    } else if (de->d_type == DT_REG){
+      //check CSV, sortCSV
+      totalProcs++;
+    } else {
+      continue;
+    }
+  }
+  return totalProcs;
+}
+
+int sortCSV(int inputFD, int outputFD){
 	//Header line processing
-	char* headerString = readLine(0);
+	char* headerString = readLine(inputFD);
 	if (!headerString){
 	  fprintf(stderr, "Header row missing.\n");
 	  return -1;
@@ -71,7 +101,7 @@ int main(int argc, char** argv){
 	//Create linked list of rows
 	int numRows = 0;
 	char* line;
-	while((line = readLine(0))){
+	while((line = readLine(inputFD))){
 	  Listing* temp = (Listing*)malloc(sizeof(Listing));
 	  if (!temp) {
 	    fprintf(stderr, "Out of memory.\n");
@@ -148,7 +178,8 @@ int main(int argc, char** argv){
 	}
 	
 	//Output data
-	printData(stdout, headerRow, numRows);
+	//**Change to write()**
+	//printData(outputFD, headerRow, numRows);
 	
 	//Freedom at last
 	free(headerString);
