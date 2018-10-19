@@ -15,20 +15,18 @@ int main(int argc, char** argv){
 	  fprintf(stderr, "Please specify the correct number of arguments.\n");
 	  fprintf(stderr, "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n");
 		return -1;
-	} else if (strcmp(argv[1], "-c") != 0){
-	  fprintf(stderr, "Unrecognized flag.\n");
-		return -1;
 	}
 	
 	//Handle flags
-	DIR* inputDir;
-	int inputSet = 0;
-	DIR* outputDir;
-	int outputSet = 0;
-	int i = 0;
-	for (i = 0; i < (argc-3)/2; i++){
-	  int flag = 3 + (2 * i);
-	  if (strcmp(argv[flag], "-d") == 0){
+	DIR* inputDir, outputDir;
+	char* columnName;
+	int inputSet = 0, outputSet = 0, columnSet = 0;
+	int flag;
+	for (flag = 1; flag < argc; flag += 2){
+	  if (strcmp(argv[flag], "-c") == 0){
+	    columnName = argv[flag + 1];
+	    columnSet = 1;
+	  } else if (strcmp(argv[flag], "-d") == 0){
 	    inputDir = opendir(argv[flag + 1]);
 	    inputSet = 1;
 	  } else if (strcmp(argv[flag], "-o") == 0){
@@ -39,6 +37,10 @@ int main(int argc, char** argv){
 	    return -1;
 	  }
 	}
+	if (columnSet != 1){
+	  fprintf(stderr, "Please specify the column name.\m");
+	  return -1;
+	}
 	if (inputSet != 1) inputDir = opendir(".");
 	if (outputSet != 1) outputDir = opendir(".");
 	if (!inputDir || !outputDir){
@@ -46,40 +48,58 @@ int main(int argc, char** argv){
 	  return -1;
 	}
 
-	write(0, "Initial PID: ", 13);
 	char num[10];
 	sprintf(num, "%d", getpid());
+	write(0, "Initial PID: ", 13);
 	write(0, num, strlen(num));
+	write(0, "\nPIDS of all child processes: ", 30);
+
+	int procs = traverse(inputDir, outputDir);
+
+	sprintf(num, "%d", procs);
+	write(0, "\b\nTotal number of processes: ", 29); //Backspace last comma and flush with newline
+	write(0, num, strlen);
 	write(0, "\n", 1);
-
-	//char* fileName = traverseDir(inputDir);
-
-	//if (strcmp(fileName, "done") == 0) {
-		//print process data to sdout and return
-	//}
 
 	return 0;
 }
 
-int traverse(DIR* directory){
+int traverse(DIR* inputDir, DIR* outputDir){
   int totalProcs = 0;
   struct dirent* de;
-  while((de = readdir(directory))){
-    if (de->d_type == DT_DIR){
+  while((de = readdir(inputDir))){
+    if (de->d_type == DT_DIR){ //Encounter a directory
       if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0){
 	continue;
       }
-      int recursiveProcs = traverse(opendir(de->d_name));
-      if (recursiveProcs == -1) return -1;
-      totalProcs += recursiveProcs;
-    } else if (de->d_type == DT_REG && isCSV(de->d_name) == 1){
+      pid_t pid = fork();
+      if (pid == -1) return -1;
+      if (pid == 0){ //child
+	char num[10];
+	sprintf(num, "%d", getpid());
+	write(0, num, strlen(num));
+	write(0, ",", 1);
+	int recursiveProcs = traverse(opendir(de->d_name), outputDir);
+	exit(recursiveProcs); //Set exit status to number of procs
+      } else { //parent
+	int status;
+	wait(&status);
+	if (WIFEXITED(status)){
+	  totalProcs += WEXITSTATUS(status);
+	} else {
+	  return -1;
+	}
+      }
+    } else if (de->d_type == DT_REG && isCSV(de->d_name) == 1){ //Encounter a CSV file
       totalProcs++;
-      int PID = fork();
-      if (PID == -1) return -1;
-      if (PID == 0){ //child
+      pid_t pid = fork();
+      if (pid == -1) return -1;
+      if (pid == 0){ //child
 	//sort stuff
       } else {
-	wait();
+	int status
+	wait(&status);
+	if (!WIFEXITED(status)) return -1;
       }
     }
   }
