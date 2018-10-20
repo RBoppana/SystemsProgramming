@@ -17,6 +17,10 @@ int* indexArray;
 int columnType; //0 for double, 1 for string
 int numColumns;
 
+int isCSV(char* name);
+
+char* getExtension(char* name);
+
 void insertNode(Listing* input);
 
 int findHeader(char* headerString, char* columnName);
@@ -35,22 +39,10 @@ int merge(int* indexes, int first, int middle, int last);
 
 int mergeSort(int* indexes, int first, int last);
 
-void printData(FILE* fp, char* headerRow, int numRows);
-
-void printLL(Node* front);
-
-void printArray(Listing** data, int numRows);
-
-void printListing(Listing* data);
+void printData(int fd, char* headerRow, int numRows);
 
 void freeLL(Node* front);
 
 void freeArray(Listing** data, int numRows);
 
 void freeListing(Listing* data);
-
-//char* traverseDir(DIR* input);
-
-int isCSV(char* name);
-
-char* getExtension(char* name);

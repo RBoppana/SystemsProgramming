@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include "scannerCSVsorter.h"
 
-int traverseDir(DIR* directory);
+int traverseDir(DIR* inputDir, DIR* outputDir);
 int sortCSV(int inputFD, int outputFD, char* columnName);
 
 int main(int argc, char** argv){
@@ -38,24 +38,27 @@ int main(int argc, char** argv){
 	  }
 	}
 	if (columnSet != 1){
-	  fprintf(stderr, "Please specify the column name.\m");
+	  fprintf(stderr, "Please specify the column name.\n");
 	  return -1;
 	}
 	if (inputSet != 1) inputDir = opendir(".");
 	if (outputSet != 1) outputDir = opendir(".");
 	if (!inputDir || !outputDir){
-	  fprintf(stderr, "Directory not found");
+	  fprintf(stderr, "Directory not found.\n");
 	  return -1;
 	}
 
-	char num[10];
-	sprintf(num, "%d", getpid());
-	write(0, "Initial PID: ", 13);
-	write(0, num, strlen(num));
-	write(0, "\nPIDS of all child processes: ", 30);
+	//Print metadata
+	fprintf(stdout, "Initial PID: %d\nPIDS of all child processes: ", getpid());
+	fflush(stdout);
 
-	int procs = traverse(inputDir, outputDir);
-
+	int procs = traverseDir(inputDir, outputDir);
+	if (procs < 0){
+	  fprintf(stderr, "Error while traversing input directory.\n");
+	  return -1;
+	}
+	
+	write(0, "\b", 1);
 	sprintf(num, "%d", procs);
 	write(0, "\b\nTotal number of processes: ", 29); //Backspace last comma and flush with newline
 	write(0, num, strlen);
@@ -64,7 +67,7 @@ int main(int argc, char** argv){
 	return 0;
 }
 
-int traverse(DIR* inputDir, DIR* outputDir){
+int traverseDir(DIR* inputDir, DIR* outputDir){
   int totalProcs = 0;
   struct dirent* de;
   while((de = readdir(inputDir))){
@@ -95,8 +98,8 @@ int traverse(DIR* inputDir, DIR* outputDir){
       pid_t pid = fork();
       if (pid == -1) return -1;
       if (pid == 0){ //child
-	//sort stuff
-      } else {
+	int inputFD = open(de->d_name, O_RDONLY);
+      } else { //parent
 	int status
 	wait(&status);
 	if (!WIFEXITED(status)) return -1;
@@ -154,8 +157,6 @@ int sortCSV(int inputFD, int outputFD, char* columnName){
 	  numRows++;
 	  free(line);
 	}
-
-	//printLL(front);
 	
 	//Put Linked List into array of pointers
 	data = (Listing**)malloc(numRows*sizeof(Listing*));
@@ -173,8 +174,6 @@ int sortCSV(int inputFD, int outputFD, char* columnName){
 		front = front->next;
 		free(temp);
 	}
-
-	//printArray(data, numRows);
 	
 	//Determine datatype of column
 	columnType = 0;

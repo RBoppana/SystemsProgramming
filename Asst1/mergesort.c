@@ -5,25 +5,6 @@
 #include <ctype.h>
 #include <dirent.h>
 #include "scannerCSVsorter.h"
-/*
-char* traverseDir(DIR* input) {
-	struct dirent* de;
-
-	while (!(de = readdir(input))) {
-		if (de->d_type == DT_DIR) {
-			char* path;
-			if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
-				continue;
-			next = entry->d_name;
-			//fork some shit?
-			traverseDir(next);
-		} else if(de->d_type == DT_REG){
-			if (isCSV(d_name)) {
-				//sort it?
-			}
-		}
-	}
-	}*/
 
 int isCSV(char* name) {
 	if (strcmp("csv", getExtension(name)) == 0 || strcmp("CSV", getExtension(name)) == 0) {
@@ -234,30 +215,13 @@ int mergeSort(int* indexes, int first, int last){
   return 0;
 }
 
-void printData(FILE* fp, char* headerRow, int numRows){
-  fprintf(fp, headerRow);
+void printData(int fd, char* headerRow, int numRows){
+  write(fd, headerRow, strlen(headerRow));
   int i;
   for(i = 0; i < numRows; i++){
-    fprintf(fp, "\n%s", data[indexArray[i]]->row);
+    write(fd, "\n", 1);
+    write(fd, data[indexArray[i]]->row, strlen(data[indexArray[i]]->row));
   }
-}
-
-void printLL(Node* front){
-  while (front != NULL){
-    printListing(front->element);
-    front = front->next;
-  }
-}
-
-void printArray(Listing** data, int numRows){
-  int i;
-  for (i = 0; i < numRows; i++){
-    printListing(data[i]);
-  }
-}
-
-void printListing(Listing* data){
-  fprintf(stdout, "Column Value: |%s|, Row string: |%s|\n", data->COI, data->row);
 }
 
 void freeLL(Node* front){
