@@ -8,7 +8,7 @@
 #include "scannerCSVsorter.h"
 
 int traverseDir(DIR* inputDir, DIR* outputDir);
-int sortCSV(int inputFD, int outputFD, char* columnName);
+int sortCSV(int inputFD, int outputFD);
 
 int main(int argc, char** argv){
         if (!(argc == 3 || argc == 5 || argc == 7)){
@@ -19,7 +19,6 @@ int main(int argc, char** argv){
 	
 	//Handle flags
 	DIR* inputDir, outputDir;
-	char* columnName;
 	int inputSet = 0, outputSet = 0, columnSet = 0;
 	int flag;
 	for (flag = 1; flag < argc; flag += 2){
@@ -58,11 +57,7 @@ int main(int argc, char** argv){
 	  return -1;
 	}
 	
-	write(0, "\b", 1);
-	sprintf(num, "%d", procs);
-	write(0, "\b\nTotal number of processes: ", 29); //Backspace last comma and flush with newline
-	write(0, num, strlen);
-	write(0, "\n", 1);
+	fprintf(stdout, "\nTotal number of processes: %d\n", procs);
 
 	return 0;
 }
@@ -76,12 +71,16 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	continue;
       }
       pid_t pid = fork();
-      if (pid == -1) return -1;
+      if (pid == -1){
+        fprintf(stderr, "Error forking.\n");
+        return -1;
+      } 
       if (pid == 0){ //child
 	char num[10];
 	sprintf(num, "%d", getpid());
 	write(0, num, strlen(num));
 	write(0, ",", 1);
+
 	int recursiveProcs = traverse(opendir(de->d_name), outputDir);
 	exit(recursiveProcs); //Set exit status to number of procs
       } else { //parent
@@ -94,22 +93,48 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	}
       }
     } else if (de->d_type == DT_REG && isCSV(de->d_name) == 1){ //Encounter a CSV file
-      totalProcs++;
       pid_t pid = fork();
-      if (pid == -1) return -1;
+      if (pid == -1) {
+        fprintf(stderr, "Error forking.\n");
+        return -1;
+      }
       if (pid == 0){ //child
-	int inputFD = open(de->d_name, O_RDONLY);
+	char num[10];
+    sprintf(num, "%d", getpid());
+    write(0, num, strlen(num));
+    write(0, ",", 1);
+
+    int inputFD = open(de->d_name, O_RDONLY);
+    char filename[strlen(de->d_name) + 8 + strlen(columnName) + 1];
+    strncat(filename, de->d_name, strlen(de->d_name)-4);
+    strcat(filename, "-sorted-");
+    strcat(filename, columnName);
+    strcat(filename, ".csv");
+    int outputFD = open(filename, O_WRONLY | O_CREAT, S_IRWXU | S_IRGRP | S_IROTH);
+    if (inputFD < 0 || outputFD < 0){
+        fprintf(stderr, "Unable to open files.\n");
+        if (inputFD >= 0) close(inputFD);
+        if (outputFD >= 0) close(outputFD);
+        exit(-1);
+    }
+    if (sortCSV(inputFD, outputFD) < 0) exit(-1);
+    close(inputFD);
+    close(outputFD);
+    exit(0);
       } else { //parent
 	int status
 	wait(&status);
-	if (!WIFEXITED(status)) return -1;
-      }
+	if (WIFEXITED(status)){
+        totalProcs++;
+    } else {
+        continue; //Do we need to count procs that have incorrect format?
+    }
     }
   }
   return totalProcs;
 }
 
-int sortCSV(int inputFD, int outputFD, char* columnName){
+int sortCSV(int inputFD, int outputFD){
 	//Header line processing
 	char* headerString = readLine(inputFD);
 	if (!headerString){
@@ -123,7 +148,7 @@ int sortCSV(int inputFD, int outputFD, char* columnName){
 	  return -1;
 	}
 	strcpy(headerRow, headerString);
-	int index = findHeader(headerString, columnName);
+	int index = findHeader(headerString);
 	if (index < 0){
 	  fprintf(stderr, "Column name not found.\n");
 	  free(headerString);

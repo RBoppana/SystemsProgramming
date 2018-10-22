@@ -14,6 +14,7 @@ typedef struct Node {
 Node* front; //Linked List to count rows of entries
 Listing** data;
 int* indexArray;
+char* columnName;
 int columnType; //0 for double, 1 for string
 int numColumns;
 
@@ -23,7 +24,7 @@ char* getExtension(char* name);
 
 void insertNode(Listing* input);
 
-int findHeader(char* headerString, char* columnName);
+int findHeader(char* headerString);
 
 int populateListing(int index, char* line, Listing* listing);
 

@@ -27,7 +27,7 @@ void insertNode(Listing* input){
 	return;
 }
 
-int findHeader(char* headerString, char* columnName){
+int findHeader(char* headerString){
   char temp[strlen(headerString) + 1]; //For storing the current column value
   temp[0] = '\0';
   int numQuotes = 0;
