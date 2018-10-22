@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include "scannerCSVsorter.h"
 
 int traverseDir(DIR* inputDir, DIR* outputDir);
@@ -18,7 +20,7 @@ int main(int argc, char** argv){
 	}
 	
 	//Handle flags
-	DIR* inputDir, outputDir;
+	DIR* inputDir, *outputDir;
 	int inputSet = 0, outputSet = 0, columnSet = 0;
 	int flag;
 	for (flag = 1; flag < argc; flag += 2){
@@ -26,9 +28,11 @@ int main(int argc, char** argv){
 	    columnName = argv[flag + 1];
 	    columnSet = 1;
 	  } else if (strcmp(argv[flag], "-d") == 0){
+	    inputDirPath = argv[flag + 1];
 	    inputDir = opendir(argv[flag + 1]);
 	    inputSet = 1;
 	  } else if (strcmp(argv[flag], "-o") == 0){
+	    outputDirPath = argv[flag + 1];
 	    outputDir = opendir(argv[flag + 1]);
 	    outputSet = 1;
 	  } else {
@@ -70,6 +74,9 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
       if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0){
 	continue;
       }
+
+      //Change inputDirPath
+
       pid_t pid = fork();
       if (pid == -1){
         fprintf(stderr, "Error forking.\n");
@@ -81,7 +88,7 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	write(0, num, strlen(num));
 	write(0, ",", 1);
 
-	int recursiveProcs = traverse(opendir(de->d_name), outputDir);
+	int recursiveProcs = traverseDir(opendir(de->d_name), outputDir);
 	exit(recursiveProcs); //Set exit status to number of procs
       } else { //parent
 	int status;
@@ -100,35 +107,36 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
       }
       if (pid == 0){ //child
 	char num[10];
-    sprintf(num, "%d", getpid());
-    write(0, num, strlen(num));
-    write(0, ",", 1);
+	sprintf(num, "%d", getpid());
+	write(0, num, strlen(num));
+	write(0, ",", 1);
 
-    int inputFD = open(de->d_name, O_RDONLY);
-    char filename[strlen(de->d_name) + 8 + strlen(columnName) + 1];
-    strncat(filename, de->d_name, strlen(de->d_name)-4);
-    strcat(filename, "-sorted-");
-    strcat(filename, columnName);
-    strcat(filename, ".csv");
-    int outputFD = open(filename, O_WRONLY | O_CREAT, S_IRWXU | S_IRGRP | S_IROTH);
-    if (inputFD < 0 || outputFD < 0){
-        fprintf(stderr, "Unable to open files.\n");
-        if (inputFD >= 0) close(inputFD);
-        if (outputFD >= 0) close(outputFD);
-        exit(-1);
-    }
-    if (sortCSV(inputFD, outputFD) < 0) exit(-1);
-    close(inputFD);
-    close(outputFD);
-    exit(0);
+	//Set up input and output file
+	char inputFile[strlen(inputDirPath) + 1 + strlen(de->d_name) + 1];
+	snprintf(inputFile, sizeof(inputFile), "%s/%s", inputDirPath, de->d_name);
+	int inputFD = open(de->d_name, O_RDONLY);
+	char outputFile[strlen(de->d_name) + 8 + strlen(columnName) + 1];
+	snprintf(outputFile, sizeof(outputFile), "%s/%.*s-sorted-%s.csv", outputDirPath, (int)(strlen(de->d_name)-4), de->d_name, columnName);
+	int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	if (inputFD < 0 || outputFD < 0){
+	  fprintf(stderr, "Unable to open file.\n");
+	  if (inputFD >= 0) close(inputFD);
+	  if (outputFD >= 0) close(outputFD);
+	  exit(-1);
+	}
+
+	int sortResult = sortCSV(inputFD, outputFD);
+	close(inputFD);
+	close(outputFD);
+	printf("sort result: %d\n", sortResult);
+	exit(sortResult);
       } else { //parent
-	int status
+	int status;
 	wait(&status);
 	if (WIFEXITED(status)){
-        totalProcs++;
-    } else {
-        continue; //Do we need to count procs that have incorrect format?
-    }
+	  totalProcs++;
+	} //Ignore incorrect csv files
+      }
     }
   }
   return totalProcs;
@@ -232,8 +240,7 @@ int sortCSV(int inputFD, int outputFD){
 	}
 	
 	//Output data
-	//**Change to write()**
-	//printData(outputFD, headerRow, numRows);
+	printData(outputFD, headerRow, numRows);
 	
 	//Freedom at last
 	free(headerString);
