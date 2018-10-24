@@ -1,0 +1,7 @@
+make,model,type,horsepower,torque,fuel economy
+audi,a4,sedan,250,244,25mpg
+dodge,challenger,coupe,340,326,17mpg
+honda,crv,crossover,196,170,27mpg
+honda,pilot,suv,,,18mpg
+land rover,discovery,suv,250,270,15mpg
+honda,accord,sedan,215,200,24mpg

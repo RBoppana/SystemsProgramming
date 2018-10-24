@@ -75,8 +75,6 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	continue;
       }
 
-      //Change inputDirPath
-
       pid_t pid = fork();
       if (pid == -1){
         fprintf(stderr, "Error forking.\n");
@@ -88,7 +86,12 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	write(0, num, strlen(num));
 	write(0, ",", 1);
 
-	int recursiveProcs = traverseDir(opendir(de->d_name), outputDir);
+	//Change input path
+	char temp[strlen(inputDirPath) + 1 + strlen(de->d_name) + 1];
+	snprintf(temp, sizeof(temp), "%s/%s", inputDirPath, de->d_name);
+	inputDirPath = temp;
+
+	int recursiveProcs = traverseDir(opendir(inputDirPath), outputDir);
 	exit(recursiveProcs); //Set exit status to number of procs
       } else { //parent
 	int status;
@@ -114,8 +117,8 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	//Set up input and output file
 	char inputFile[strlen(inputDirPath) + 1 + strlen(de->d_name) + 1];
 	snprintf(inputFile, sizeof(inputFile), "%s/%s", inputDirPath, de->d_name);
-	int inputFD = open(de->d_name, O_RDONLY);
-	char outputFile[strlen(de->d_name) + 8 + strlen(columnName) + 1];
+	int inputFD = open(inputFile, O_RDONLY);
+	char outputFile[strlen(outputDirPath) + 1 + strlen(de->d_name) + 8 + strlen(columnName) + 1];
 	snprintf(outputFile, sizeof(outputFile), "%s/%.*s-sorted-%s.csv", outputDirPath, (int)(strlen(de->d_name)-4), de->d_name, columnName);
 	int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if (inputFD < 0 || outputFD < 0){
@@ -128,7 +131,6 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	int sortResult = sortCSV(inputFD, outputFD);
 	close(inputFD);
 	close(outputFD);
-	printf("sort result: %d\n", sortResult);
 	exit(sortResult);
       } else { //parent
 	int status;
