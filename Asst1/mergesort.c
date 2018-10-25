@@ -7,16 +7,12 @@
 #include "scannerCSVsorter.h"
 
 int isCSV(char* name) {
-	if (strcmp("csv", getExtension(name)) == 0 || strcmp("CSV", getExtension(name)) == 0) {
+  char* ext = strrchr(name, '.');
+  if (!ext || ext == name) return 0;
+	if (strcmp("csv", ext + 1) == 0 || strcmp("CSV", ext + 1) == 0) {
 		return 1;
 	}
 	return 0;
-}
-
-char* getExtension(char *name) {
-    char *ext = strrchr(name, '.');
-    if(!ext || ext == name) return "";
-    return ext + 1;
 }
 
 void insertNode(Listing* input){

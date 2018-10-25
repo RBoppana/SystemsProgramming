@@ -10,7 +10,7 @@
 #include "scannerCSVsorter.h"
 
 int traverseDir(DIR* inputDir, DIR* outputDir);
-int sortCSV(int inputFD, int outputFD);
+int sortCSV(char* inputName);
 
 int main(int argc, char** argv){
         if (!(argc == 3 || argc == 5 || argc == 7)){
@@ -83,8 +83,8 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
       if (pid == 0){ //child
 	char num[10];
 	sprintf(num, "%d", getpid());
-	write(0, num, strlen(num));
-	write(0, ",", 1);
+	write(1, num, strlen(num));
+	write(1, ",", 1);
 
 	//Change input path
 	char temp[strlen(inputDirPath) + 1 + strlen(de->d_name) + 1];
@@ -97,41 +97,29 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	int status;
 	wait(&status);
 	if (WIFEXITED(status)){
-	  totalProcs += WEXITSTATUS(status);
+	  totalProcs += WEXITSTATUS(status) + 1;
 	} else {
 	  return -1;
 	}
       }
-    } else if (de->d_type == DT_REG && isCSV(de->d_name) == 1){ //Encounter a CSV file
+    } else { //Not a directory
       pid_t pid = fork();
       if (pid == -1) {
-        fprintf(stderr, "Error forking.\n");
-        return -1;
+	fprintf(stderr, "Error forking.\n");
+	return -1;
       }
       if (pid == 0){ //child
 	char num[10];
 	sprintf(num, "%d", getpid());
-	write(0, num, strlen(num));
-	write(0, ",", 1);
+	write(1, num, strlen(num));
+	write(1, ",", 1);
 
-	//Set up input and output file
-	char inputFile[strlen(inputDirPath) + 1 + strlen(de->d_name) + 1];
-	snprintf(inputFile, sizeof(inputFile), "%s/%s", inputDirPath, de->d_name);
-	int inputFD = open(inputFile, O_RDONLY);
-	char outputFile[strlen(outputDirPath) + 1 + strlen(de->d_name) + 8 + strlen(columnName) + 1];
-	snprintf(outputFile, sizeof(outputFile), "%s/%.*s-sorted-%s.csv", outputDirPath, (int)(strlen(de->d_name)-4), de->d_name, columnName);
-	int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	if (inputFD < 0 || outputFD < 0){
-	  fprintf(stderr, "Unable to open file.\n");
-	  if (inputFD >= 0) close(inputFD);
-	  if (outputFD >= 0) close(outputFD);
+	if (de->d_type == DT_REG && isCSV(de->d_name) == 1){ //Encountered a CSV file
+	  int sortResult = sortCSV(de->d_name);
+	  exit(sortResult);
+	} else {
 	  exit(-1);
 	}
-
-	int sortResult = sortCSV(inputFD, outputFD);
-	close(inputFD);
-	close(outputFD);
-	exit(sortResult);
       } else { //parent
 	int status;
 	wait(&status);
@@ -144,8 +132,17 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
   return totalProcs;
 }
 
-int sortCSV(int inputFD, int outputFD){
-	//Header line processing
+int sortCSV(char* inputName){
+  //Set up input file
+  char inputFile[strlen(inputDirPath) + 1 + strlen(inputName) + 1];
+  snprintf(inputFile, sizeof(inputFile), "%s/%s", inputDirPath, inputName);
+  int inputFD = open(inputFile, O_RDONLY);
+  if (inputFD < 0){
+    fprintf(stderr, "Unable to open input file.\n");
+    return -1;
+  }
+
+  //Header line processing
 	char* headerString = readLine(inputFD);
 	if (!headerString){
 	  fprintf(stderr, "Header row missing.\n");
@@ -235,6 +232,18 @@ int sortCSV(int inputFD, int outputFD){
 	//Sort!
 	if (mergeSort(indexArray, 0, numRows - 1) != 0){
 	  fprintf(stderr, "Error sorting.\n");
+	  free(headerString);
+	  free(indexArray);
+	  freeArray(data, numRows);
+	  return -1;
+	}
+
+	//Set up output file
+	char outputFile[strlen(outputDirPath) + 1 + strlen(inputName) + 8 + strlen(columnName) + 1];
+	snprintf(outputFile, sizeof(outputFile), "%s/%.*s-sorted-%s.csv", outputDirPath, (int)(strlen(inputName)-4), inputName, columnName);
+	int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	if (outputFD < 0){
+	  fprintf(stderr, "Unable to open/create output file.\n");
 	  free(headerString);
 	  free(indexArray);
 	  freeArray(data, numRows);

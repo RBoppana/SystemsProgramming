@@ -22,8 +22,6 @@ char* outputDirPath;
 
 int isCSV(char* name);
 
-char* getExtension(char* name);
-
 void insertNode(Listing* input);
 
 int findHeader(char* headerString);
