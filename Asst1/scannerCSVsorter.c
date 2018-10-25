@@ -55,6 +55,7 @@ int main(int argc, char** argv){
 	fprintf(stdout, "Initial PID: %d\nPIDS of all child processes: ", getpid());
 	fflush(stdout);
 
+	firstProc = 1;
 	int procs = traverseDir(inputDir, outputDir);
 	if (procs < 0){
 	  fprintf(stderr, "Error while traversing input directory.\n");
@@ -81,10 +82,9 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
         return -1;
       } 
       if (pid == 0){ //child
-	char num[10];
-	sprintf(num, "%d", getpid());
-	write(1, num, strlen(num));
-	write(1, ",", 1);
+	if (firstProc == 1) fprintf(stdout, "%d", getpid());
+	else fprintf(stdout, ", %d", getpid());
+	fflush(stdout);
 
 	//Change input path
 	char temp[strlen(inputDirPath) + 1 + strlen(de->d_name) + 1];
@@ -94,6 +94,7 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	int recursiveProcs = traverseDir(opendir(inputDirPath), outputDir);
 	exit(recursiveProcs); //Set exit status to number of procs
       } else { //parent
+	firstProc = 0;
 	int status;
 	wait(&status);
 	if (WIFEXITED(status)){
@@ -109,18 +110,27 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	return -1;
       }
       if (pid == 0){ //child
-	char num[10];
-	sprintf(num, "%d", getpid());
-	write(1, num, strlen(num));
-	write(1, ",", 1);
+	if (firstProc == 1) fprintf(stdout, "%d", getpid());
+	else fprintf(stdout, ", %d", getpid());
+	fflush(stdout);
 
-	if (de->d_type == DT_REG && isCSV(de->d_name) == 1){ //Encountered a CSV file
+	if (de->d_type == DT_REG && endsWith(de->d_name, ".csv") == 1){ //Encountered a CSV file
+	  //Check if already sorted
+	  char sorted[8 + strlen(columnName) + 4 + 1];
+	  snprintf(sorted, sizeof(sorted), "-sorted-%s.csv", columnName);
+	  if (endsWith(de->d_name, sorted) == 1){
+	    fprintf(stderr, "Already sorted.\n");
+	    exit(-1);
+	  }
+
 	  int sortResult = sortCSV(de->d_name);
 	  exit(sortResult);
 	} else {
+	  fprintf(stderr, "Not a CSV file.\n");
 	  exit(-1);
 	}
       } else { //parent
+	firstProc = 0;
 	int status;
 	wait(&status);
 	if (WIFEXITED(status)){

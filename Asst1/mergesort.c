@@ -6,13 +6,12 @@
 #include <dirent.h>
 #include "scannerCSVsorter.h"
 
-int isCSV(char* name) {
-  char* ext = strrchr(name, '.');
-  if (!ext || ext == name) return 0;
-	if (strcmp("csv", ext + 1) == 0 || strcmp("CSV", ext + 1) == 0) {
-		return 1;
-	}
-	return 0;
+int endsWith(char* str, char* suffix){
+  int index = strlen(str) - strlen(suffix);
+  if (strcmp(str + index, suffix) == 0){
+    return 1;
+  }
+  return 0;
 }
 
 void insertNode(Listing* input){

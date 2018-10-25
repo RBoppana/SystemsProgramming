@@ -19,8 +19,9 @@ int columnType; //0 for double, 1 for string
 int numColumns;
 char* inputDirPath;
 char* outputDirPath;
+int firstProc;
 
-int isCSV(char* name);
+int endsWith(char* str, char* suffix);
 
 void insertNode(Listing* input);
 
