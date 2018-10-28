@@ -21,6 +21,10 @@ char* inputDirPath;
 char* outputDirPath;
 int firstProc;
 
+int traverseDir(DIR* inputDir);
+
+int sortCSV(char* inputName);
+
 int endsWith(char* str, char* suffix);
 
 void insertNode(Listing* input);

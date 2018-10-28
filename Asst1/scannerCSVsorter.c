@@ -9,43 +9,58 @@
 #include <sys/wait.h>
 #include "scannerCSVsorter.h"
 
-int traverseDir(DIR* inputDir, DIR* outputDir);
-int sortCSV(char* inputName);
+#define USAGE "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
 
 int main(int argc, char** argv){
-        if (!(argc == 3 || argc == 5 || argc == 7)){
-	  fprintf(stderr, "Please specify the correct number of arguments.\n");
-	  fprintf(stderr, "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n");
-		return -1;
-	}
-	
+
 	//Handle flags
-	DIR* inputDir, *outputDir;
-	int inputSet = 0, outputSet = 0, columnSet = 0;
-	int flag;
-	for (flag = 1; flag < argc; flag += 2){
-	  if (strcmp(argv[flag], "-c") == 0){
-	    columnName = argv[flag + 1];
+	int columnSet = 0, inputSet = 0, outputSet = 0;
+	char option;
+	opterr = 0;
+	while ((option = getopt(argc, argv, "c:d:o:")) != -1){
+	  switch (option){
+	  case 'c':
+	    columnName = optarg;
 	    columnSet = 1;
-	  } else if (strcmp(argv[flag], "-d") == 0){
-	    inputDirPath = argv[flag + 1];
-	    inputDir = opendir(argv[flag + 1]);
+	    break;
+	  case 'd':
+	    inputDirPath = optarg;
 	    inputSet = 1;
-	  } else if (strcmp(argv[flag], "-o") == 0){
-	    outputDirPath = argv[flag + 1];
-	    outputDir = opendir(argv[flag + 1]);
+	    break;
+	  case 'o':
+	    outputDirPath = optarg;
 	    outputSet = 1;
-	  } else {
-	    fprintf(stderr, "Unrecognized flag.\n");
+	    break;
+	  case '?':
+	    if (optopt == 'c' || optopt == 'd' || optopt == 'o'){
+	      fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+	      return -1;
+	    } else {
+	      fprintf(stderr, "Unrecognized option -%c.\n", optopt);
+	      fprintf(stderr, USAGE);
+	      return -1;
+	    }
+	  default:
+	    fprintf(stderr, "Error reading options.\n");
 	    return -1;
 	  }
 	}
-	if (columnSet != 1){
-	  fprintf(stderr, "Please specify the column name.\n");
+	if (optind < argc){
+	  fprintf(stderr, "Unrecognized argument %s.\n", argv[optind]);
+	  fprintf(stderr, USAGE);
 	  return -1;
 	}
-	if (inputSet != 1) inputDir = opendir(".");
-	if (outputSet != 1) outputDir = opendir(".");
+	if (columnSet != 1){
+	  fprintf(stderr, "Please specify the column name.\n");
+	  fprintf(stderr, USAGE);
+	  return -1;
+	}
+	if (inputSet != 1) inputDirPath = "."; 
+	if (outputSet != 1) outputDirPath = "."; 
+	
+	DIR* inputDir, *outputDir;
+	inputDir = opendir(inputDirPath);
+	outputDir = opendir(outputDirPath);
 	if (!inputDir || !outputDir){
 	  fprintf(stderr, "Directory not found.\n");
 	  return -1;
@@ -56,7 +71,7 @@ int main(int argc, char** argv){
 	fflush(stdout);
 
 	firstProc = 1;
-	int procs = traverseDir(inputDir, outputDir);
+	int procs = traverseDir(inputDir);
 	if (procs < 0){
 	  fprintf(stderr, "Error while traversing input directory.\n");
 	  return -1;
@@ -67,7 +82,7 @@ int main(int argc, char** argv){
 	return 0;
 }
 
-int traverseDir(DIR* inputDir, DIR* outputDir){
+int traverseDir(DIR* inputDir){
   int totalProcs = 0;
   struct dirent* de;
   while((de = readdir(inputDir))){
@@ -85,13 +100,14 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	if (firstProc == 1) fprintf(stdout, "%d", getpid());
 	else fprintf(stdout, ", %d", getpid());
 	fflush(stdout);
+	firstProc = 0;
 
 	//Change input path
 	char temp[strlen(inputDirPath) + 1 + strlen(de->d_name) + 1];
 	snprintf(temp, sizeof(temp), "%s/%s", inputDirPath, de->d_name);
 	inputDirPath = temp;
 
-	int recursiveProcs = traverseDir(opendir(inputDirPath), outputDir);
+	int recursiveProcs = traverseDir(opendir(inputDirPath));
 	exit(recursiveProcs); //Set exit status to number of procs
       } else { //parent
 	firstProc = 0;
@@ -119,14 +135,14 @@ int traverseDir(DIR* inputDir, DIR* outputDir){
 	  char sorted[8 + strlen(columnName) + 4 + 1];
 	  snprintf(sorted, sizeof(sorted), "-sorted-%s.csv", columnName);
 	  if (endsWith(de->d_name, sorted) == 1){
-	    fprintf(stderr, "Already sorted.\n");
+	    fprintf(stderr, "Already sorted. (%s/%s)\n", inputDirPath, de->d_name);
 	    exit(-1);
 	  }
 
 	  int sortResult = sortCSV(de->d_name);
 	  exit(sortResult);
 	} else {
-	  fprintf(stderr, "Not a CSV file.\n");
+	  fprintf(stderr, "Not a CSV file. (%s/%s)\n", inputDirPath, de->d_name);
 	  exit(-1);
 	}
       } else { //parent
@@ -148,14 +164,14 @@ int sortCSV(char* inputName){
   snprintf(inputFile, sizeof(inputFile), "%s/%s", inputDirPath, inputName);
   int inputFD = open(inputFile, O_RDONLY);
   if (inputFD < 0){
-    fprintf(stderr, "Unable to open input file.\n");
+    fprintf(stderr, "Unable to open input file. (%s/%s)\n", inputDirPath, inputName);
     return -1;
   }
 
   //Header line processing
 	char* headerString = readLine(inputFD);
 	if (!headerString){
-	  fprintf(stderr, "Header row missing.\n");
+	  fprintf(stderr, "Header row missing. (%s/%s)\n", inputDirPath, inputName);
 	  return -1;
 	}
 	char* headerRow = (char*) malloc((strlen(headerString) + 1) * sizeof(char)); //Keeps header string intact
@@ -167,7 +183,7 @@ int sortCSV(char* inputName){
 	strcpy(headerRow, headerString);
 	int index = findHeader(headerString);
 	if (index < 0){
-	  fprintf(stderr, "Column name not found.\n");
+	  fprintf(stderr, "Column name not found. (%s/%s)\n", inputDirPath, inputName);
 	  free(headerString);
 	  free(headerRow);
 	  return -1;
@@ -187,7 +203,7 @@ int sortCSV(char* inputName){
 	    return -1;
 	  }
 	  if (populateListing(index, line, temp) < 0){
-	    fprintf(stderr, "Error parsing rows.\n");
+	    fprintf(stderr, "Error parsing rows. (%s/%s)\n", inputDirPath, inputName);
 	    free(temp);
 	    free(line);
 	    free(headerString);
@@ -241,7 +257,7 @@ int sortCSV(char* inputName){
 	
 	//Sort!
 	if (mergeSort(indexArray, 0, numRows - 1) != 0){
-	  fprintf(stderr, "Error sorting.\n");
+	  fprintf(stderr, "Error sorting. (%s)\n", inputName);
 	  free(headerString);
 	  free(indexArray);
 	  freeArray(data, numRows);
@@ -253,7 +269,7 @@ int sortCSV(char* inputName){
 	snprintf(outputFile, sizeof(outputFile), "%s/%.*s-sorted-%s.csv", outputDirPath, (int)(strlen(inputName)-4), inputName, columnName);
 	int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if (outputFD < 0){
-	  fprintf(stderr, "Unable to open/create output file.\n");
+	  fprintf(stderr, "Unable to open/create output file. (%s/%s)\n", inputDirPath, inputFile);
 	  free(headerString);
 	  free(indexArray);
 	  freeArray(data, numRows);
