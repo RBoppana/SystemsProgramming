@@ -23,13 +23,14 @@ void insertNode(Listing* input){
 }
 
 int findHeader(char* headerString){
-  char temp[strlen(headerString) + 1]; //For storing the current column value
+  char* trimmedHeader = removeWhitespace(headerString);
+  char temp[strlen(trimmedHeader) + 1]; //For storing the current column value
   temp[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
   int targetIndex = -1;
   char* token;
-  while ((token = strsep(&headerString, ","))){
+  while ((token = strsep(&trimmedHeader, ","))){
     strcat(temp, token);
     numQuotes += numChars(token, '"');
     if (numQuotes % 2 == 1){ //Check if comma is part of string
@@ -43,6 +44,7 @@ int findHeader(char* headerString){
     }
   }
   numColumns = currentIndex;
+  free(trimmedHeader);
   return targetIndex;
 }
 
@@ -54,12 +56,13 @@ int populateListing(int index, char* line, Listing* listing){
   listing->row = temp;
   
   //Get string value of column of interest
-  char col[strlen(line) + 1];
+  char* trimmedLine = removeWhitespace(line);
+  char col[strlen(trimmedLine) + 1];
   col[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
   char* token;
-  while ((token = strsep(&line, ","))){ //Parse through commas
+  while ((token = strsep(&trimmedLine, ","))){ //Parse through commas
     if (currentIndex == index){
       strcat(col, token);
     }
@@ -73,6 +76,8 @@ int populateListing(int index, char* line, Listing* listing){
     }
   }
   if (currentIndex != numColumns){ //Check number of columns match
+    free(temp);
+    free(trimmedLine);
     return -1;
   }
   if (col[0] == '\0'){
@@ -81,15 +86,18 @@ int populateListing(int index, char* line, Listing* listing){
     char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
     if (!new) {
       free(temp);
+      free(trimmedLine);
       return -1;
     }  
     strcpy(new, col);
     char* trimmed = removeWhitespace(new); //Remove whitespace outside quotes
+    free(new);
 
     if (trimmed[0] == '"'){ //Crop off quotes
       char* noQuotes = (char*) malloc((strlen(trimmed) - 1) * sizeof(char));
       if (!noQuotes){
 	free(temp);
+	free(trimmedLine);
 	free(trimmed);
 	return -1;
       }
@@ -97,10 +105,11 @@ int populateListing(int index, char* line, Listing* listing){
       strcpy(noQuotes, &(trimmed[1]));
       free(trimmed);
       trimmed = removeWhitespace(noQuotes); //Remove whitespace inside quotes
+      free(noQuotes);
     } 
     listing->COI = trimmed;
   }
-  
+  free(trimmedLine);
   return 0;
 }
 
@@ -156,7 +165,6 @@ char* removeWhitespace(char* string){
   if (!result) return result;
   string[end + 1] = '\0';
   strcpy(result, &(string[start]));
-  free(string);
   return result;
 }
 
