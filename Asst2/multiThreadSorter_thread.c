@@ -67,7 +67,7 @@ int main(int argc, char** argv){
 	}
 
 	//Print metadata
-	fprintf(stdout, "Initial PID: %d\nPIDS of all child processes: ", getpid());
+	fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
 	fflush(stdout);
 
 	firstProc = 1;
@@ -82,8 +82,8 @@ int main(int argc, char** argv){
 	return 0;
 }
 
-int traverseDir(DIR* inputDir){
-  int totalProcs = 0;
+void* traverseDir(DIR* inputDir){
+  int totalThreads = 0;
   struct dirent* de;
   while((de = readdir(inputDir))){
     if (de->d_type == DT_DIR){ //Encounter a directory
@@ -91,6 +91,7 @@ int traverseDir(DIR* inputDir){
 	continue;
       }
 
+      /*
       pid_t pid = fork();
       if (pid == -1){
         fprintf(stderr, "Error forking.\n");
@@ -119,6 +120,7 @@ int traverseDir(DIR* inputDir){
 	  return -1;
 	}
       }
+      */
     } else { //Not a directory
       pid_t pid = fork();
       if (pid == -1) {
