@@ -11,15 +11,17 @@ typedef struct Node {
 	struct Node* next;
 } Node;
 
+typedef struct DirThreadArgs {
+	char* inputDirPath;
+	int firstThread;
+} DirThreadArgs;
+
 Node* front; //Linked List to count rows of entries
 Listing** data;
 int* indexArray;
 char* columnName;
 //int columnType; //0 for double, 1 for string
 //int numColumns;
-char* inputDirPath;
-char* outputDirPath;
-int firstProc; 
 
 int traverseDir(DIR* inputDir);
 
