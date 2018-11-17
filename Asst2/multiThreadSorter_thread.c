@@ -70,7 +70,6 @@ int main(int argc, char** argv){
     fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
     fflush(stdout);
 
-    firstProc = 1;
     int procs = traverseDir(inputDir);
     if (procs < 0){
       fprintf(stderr, "Error while traversing input directory.\n");
@@ -82,22 +81,58 @@ int main(int argc, char** argv){
     return 0;
 }
 
-//Function for threads that process directories
+//Loop through top level 
+void* traverseDir(DIR* input){
+
+}
+
+//Function for threads that process subdirectories
 void* directoryThread(void* args){
+    //Print TID
+    pthread_mutex_lock(&TIDMutex);
+    if (args.threadNo == 1) fprintf(stdout, "%lu", (unsigned long) pthread_self());
+    else if (threadNo > 1) fprintf(stdout, ", %lu", (unsigned long) pthread_self());
+    pthread_mutex_unlock(&TIDMutex);
+
     int totalThreads = 0;
     DIR* inputDir = opendir(args->inputDirPath);
     struct direct* de;
+    int fileObjects = 0;
+    
+    //Count number of file objects
     while((de = readdir(inputDir))){
-        if (de->d_type == DT_DIR){ //Encounter a directory
-            if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0){
-                continue;
-            }
+        fileObjects++;
+    }
+    rewinddir(inputDir);
 
-            pthread_t thread;
-            DirThreadArgs* argument = (DirThreadArgs*) malloc(sizeof(DirThreadArgs));
-            argument->inputDirPath = 
-            pthread_create(&thread, NULL, directoryThread, );
+    pthread_t threads[fileObjects]; 
+    int i;
+    for (i = 0; i < fileObjects; i++){
+        de = readdir(inputDir);
+        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0){
+            continue;
         }
+
+        //Set up arguments
+        DirThreadArgs* argument = (DirThreadArgs*) malloc(sizeof(DirThreadArgs));
+        char temp[strlen(args->inputDirPath) + 1 + strlen(de->d_name) + 1];
+        snprintf(temp, sizeof(temp), "%s/%s", args->inputDirPath, de->d_name);
+        argument->inputDirPath = temp;
+        argument.threadNo = args.threadNo + 1;
+
+        //Create thread
+        pthread_t thread;
+        int result = pthread_create(&thread, NULL, directoryThread, argument);
+        if (result != 0){
+            fprintf(stderr, "Error creating thread\n");
+            return (void*) -1;
+        }
+
+        //Add number of child threads
+        void* status;
+        pthread_join(thread, &status);
+        if ((int)(intptr_t) status < 0) return (void*) -1;
+        else totalThreads += (int)(intptr_t) status + 1;
     }
 }
 

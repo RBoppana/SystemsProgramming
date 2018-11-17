@@ -12,16 +12,18 @@ typedef struct Node {
 } Node;
 
 typedef struct DirThreadArgs {
-	char* inputDirPath;
-	int firstThread;
+	char** inputDirPath;
+	int threadNo;
 } DirThreadArgs;
 
+//Global variables
 Node* front; //Linked List to count rows of entries
 Listing** data;
 int* indexArray;
 char* columnName;
-//int columnType; //0 for double, 1 for string
-//int numColumns;
+char* TIDs;
+pthread_mutex_t LLMutex;
+pthread_mutex_t TIDMutex;
 
 int traverseDir(DIR* inputDir);
 
