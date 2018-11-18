@@ -43,10 +43,10 @@ typedef struct Node {
 	struct Node* next;
 } Node;
 
-typedef struct DirThreadArgs {
-	char** inputDirPath;
+typedef struct ThreadArgs {
+	char* inputDirPath;
 	int threadNo;
-} DirThreadArgs;
+} ThreadArgs;
 
 //Global variables
 Node* front; //Linked List to count rows of entries
@@ -61,9 +61,11 @@ char* TIDs;
 pthread_mutex_t LLMutex;
 pthread_mutex_t TIDMutex;
 
-int traverseDir(DIR* inputDir);
+void* directoryThread(void* args);
 
-int sortCSV(char* inputName);
+void* fileThread(void* args);
+
+int findI(char* str);
 
 int endsWith(char* str, char* suffix);
 

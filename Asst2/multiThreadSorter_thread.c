@@ -7,7 +7,7 @@
 #include <fcntl.h> //O_CREAT, etc.
 #include <sys/types.h> //pthread_t, size_t, etc.
 #include <pthread.h>
-#include "scannerCSVsorter.h"
+#include "multiThreadSorter_thread.h"
 
 #define USAGE "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
 
@@ -76,9 +76,9 @@ int main(int argc, char** argv){
     fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
     fflush(stdout);
 
-    DirThreadArgs* argument = (DirThreadArgs*) malloc(sizeof(DirThreadArgs));
+    ThreadArgs* argument = (ThreadArgs*) malloc(sizeof(ThreadArgs));
     argument->inputDirPath = inputDirPath;
-    argument.threadNo = 0;
+    argument->threadNo = 0;
     int threads = (int)(intptr_t) directoryThread(argument);
     if (threads < 0){
         fprintf(stderr, "Error while traversing input directory.\n");
@@ -98,13 +98,13 @@ int main(int argc, char** argv){
     }
     
     //Set COI for all rows
-    int COIindex = findI(columnName);
+    int COIIndex = findI(columnName);
     for (i = 0; i < numRows; i++){
         data[i]->COI = getListingField(data[i], COIIndex);
     }
 
     //Determine datatype of COI
-    columnType = 0;
+    int columnType = 0;
     for (i = 0; i < numRows; i++) {
         char* COItemp = data[i]->COI;
         if (!COItemp) continue;
@@ -127,19 +127,18 @@ int main(int argc, char** argv){
 
     //Sort!
     if (mergeSort(indexArray, 0, numRows - 1) != 0){
-      fprintf(stderr, "Error sorting. (%s)\n", inputName);
-      free(headerString);
+      fprintf(stderr, "Error sorting. \n");
       free(indexArray);
       freeArray(data, numRows);
       return -1;
     }
 
     //Set up output file
-    char outputFile[strlen(outputDirPath) + 1 + strlen(inputName) + 8 + strlen(columnName) + 1];
-    snprintf(outputFile, sizeof(outputFile), "%s/%.*s-sorted-%s.csv", outputDirPath, (int)(strlen(inputName)-4), inputName, columnName);
+    char outputFile[strlen(outputDirPath)+ 17 + strlen(columnName) + 5];
+    snprintf(outputFile, sizeof(outputFile), "%s/AllFiles-sorted-%s.csv", outputDirPath, columnName);
     int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (outputFD < 0){
-      fprintf(stderr, "Unable to open/create output file. (%s/%s)\n", inputDirPath, inputFile);
+      fprintf(stderr, "Unable to open/create output file.\n");
       free(headerString);
       free(indexArray);
       freeArray(data, numRows);
@@ -158,11 +157,13 @@ int main(int argc, char** argv){
 }
 
 //Function for threads that process subdirectories
-void* directoryThread(void* args){
+void* directoryThread(void* argument){
+  ThreadArgs* args = (ThreadArgs*) argument;
+
     //Print TID
     pthread_mutex_lock(&TIDMutex);
-    if (args.threadNo == 1) fprintf(stdout, "%lu", (unsigned long) pthread_self());
-    else if (threadNo > 1) fprintf(stdout, ", %lu", (unsigned long) pthread_self());
+    if (args->threadNo == 1) fprintf(stdout, "%lu", (unsigned long) pthread_self());
+    else if (args->threadNo > 1) fprintf(stdout, ", %lu", (unsigned long) pthread_self());
     pthread_mutex_unlock(&TIDMutex);
 
     int totalThreads = 0;
@@ -171,7 +172,7 @@ void* directoryThread(void* args){
         fprintf(stderr, "Directory not found.\n");
         return (void*) -1;
     }
-    struct direct* de;
+    struct dirent* de;
     int fileObjects = 0;
     
     //Count number of file objects
@@ -189,11 +190,11 @@ void* directoryThread(void* args){
         }
 
         //Set up arguments
-        DirThreadArgs* argument = (DirThreadArgs*) malloc(sizeof(DirThreadArgs));
+        ThreadArgs* argument = (ThreadArgs*) malloc(sizeof(ThreadArgs));
         char temp[strlen(args->inputDirPath) + 1 + strlen(de->d_name) + 1];
         snprintf(temp, sizeof(temp), "%s/%s", args->inputDirPath, de->d_name);
         argument->inputDirPath = temp;
-        argument.threadNo = args.threadNo + i + 1;
+        argument->threadNo = args->threadNo + i + 1;
 
         //Create thread
         int result;
@@ -218,12 +219,14 @@ void* directoryThread(void* args){
 }
 
 //Function for threads that process files
-void* fileThread(void* args){
-    if (de->d_type != DT_REG || endsWith(de->d_name, ".csv") != 1){
+void* fileThread(void* argument){
+  ThreadArgs* args = (ThreadArgs*) argument;  
+
+  if (endsWith(args->inputDirPath, ".csv") != 1){
         fprintf(stderr, "Not a CSV file. (%s)\n", args->inputDirPath);
     }
 
-    int inputFD = open(inputFile, O_RDONLY);
+    int inputFD = open(args->inputDirPath, O_RDONLY);
     if (inputFD < 0){
         fprintf(stderr, "Unable to open input file. (%s)\n", args->inputDirPath);
         return (void*) -1;
@@ -237,7 +240,8 @@ void* fileThread(void* args){
         return (void*) -1;
     }
     int k = 0;
-    char* token = strtok_r(headerString, ",");
+    char* savePtr;
+    char* token = strtok_r(headerString, ",", &savePtr);
     while (token != NULL){
         int x = findI(token);
         if(x > -1){
@@ -251,13 +255,13 @@ void* fileThread(void* args){
             fprintf(stderr, "Improper column name. (%s)\n", args->inputDirPath);
             return (void*) -1;
         }
-        token = strtok_r(NULL, ",");
+        token = strtok_r(NULL, ",", &savePtr);
     }
 
     //Create temporary linked list of rows
     Node* tempFront;
     char* line;
-    while(line = readLine(inputFD)){
+    while((line = readLine(inputFD))){
         Listing* temp = (Listing*) malloc(sizeof(Listing));
         if (!temp) {
             fprintf(stderr, "Out of memory.\n");
