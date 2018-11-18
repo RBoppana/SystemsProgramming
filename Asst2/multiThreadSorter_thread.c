@@ -242,102 +242,134 @@ int sortCSV(char* inputName){
     fprintf(stderr, "Unable to open input file. (%s/%s)\n", inputDirPath, inputName);
     return -1;
   }
-
+	
   //Header line processing
-    char* headerString = readLine(inputFD);
-    if (!headerString){
-      fprintf(stderr, "Header row missing. (%s/%s)\n", inputDirPath, inputName);
-      return -1;
-    }
-    char* headerRow = (char*) malloc((strlen(headerString) + 1) * sizeof(char)); //Keeps header string intact
-    if (!headerRow){
-      free(headerString);
-      fprintf(stderr, "Out of memory.\n");
-      return -1;
-    }
-    strcpy(headerRow, headerString);
-    int index = findHeader(headerString);
-    if (index < 0){
-      fprintf(stderr, "Column name not found. (%s/%s)\n", inputDirPath, inputName);
-      free(headerString);
-      free(headerRow);
-      return -1;
-    }
-    
-    //Create linked list of rows
-    int numRows = 0;
-    char* line;
-    while((line = readLine(inputFD))){
-      Listing* temp = (Listing*)malloc(sizeof(Listing));
-      if (!temp) {
-        fprintf(stderr, "Out of memory.\n");
-        free(line);
-        freeLL(front);
-        free(headerString);
-        free(headerRow);
-        return -1;
-      }
-      if (populateListing(index, line, temp) < 0){
-        fprintf(stderr, "Error parsing rows. (%s/%s)\n", inputDirPath, inputName);
-        free(temp);
-        free(line);
-        free(headerString);
-        free(headerRow);
-        freeLL(front);
-        return -1;
-      }
-      insertNode(temp);
-      numRows++;
-      free(line);
-    }
-    
-    //Put Linked List into array of pointers
-    data = (Listing**)malloc(numRows*sizeof(Listing*));
-    if (!data){
-      fprintf(stderr, "Out of memory.\n");
-      free(headerString);
-      free(headerRow);
-      freeLL(front);
-      return -1;
-    }
-    int i = numRows-1;
-    while(front != NULL){
-      data[i--] = front->element;
-        Node* temp = front;
-        front = front->next;
-        free(temp);
-    }
-    
-    //Determine datatype of column
-    columnType = 0;
-    for (i = 0; i < numRows; i++) {
-        char* COItemp = data[i]->COI;
-        if (!COItemp) continue;
-        int j, done = 0;
-        for (j = 0; j < strlen(COItemp); j++) {
-            if (isdigit(COItemp[j]) == 0 && COItemp[j] != '.' && COItemp[j] != '-') {
-                columnType = 1;
-                done = 1;
-                break;
-            }
-        }
-        if (done == 1) break;
-    }
-    
-    //Create int array for sorting
-    indexArray = (int*)malloc(numRows*sizeof(int));
-    for (i = 0; i < numRows; i++){
-        indexArray[i] = i;
-    }
-    
-    //Sort!
-    if (mergeSort(indexArray, 0, numRows - 1) != 0){
-      fprintf(stderr, "Error sorting. (%s)\n", inputName);
-      free(headerString);
-      free(indexArray);
-      freeArray(data, numRows);
-      return -1;
-    }
+	int headerIndexes[28];
+	char* headerString = readLine(inputFD);
+	if (!headerString){
+	  fprintf(stderr, "Header row missing. (%s/%s)\n", inputDirPath, inputName);
+	  return -1;
+	}
+	char* headerRow = (char*) malloc((strlen(headerString) + 1) * sizeof(char)); //Keeps header string intact
+	if (!headerRow){
+	  free(headerString);
+	  fprintf(stderr, "Out of memory.\n");
+	  return -1;
+	}
+	strcpy(headerRow, headerString);
+
+	int k = 0;
+	char* token = strtok(headerRow, ",\n");
+	while(token != NULL){
+		int x = findI(token);
+		if(x > -1){
+			headerIndexes[k++] = x;
+		}else{
+			fprintf(stderr, "Not movie data. (%s/%s)\n", inputDirPath, inputName);
+			return -1;
+		}
+		token = strtok(NULL, ",\n");
+	}
+
+/*
+	int index = findHeader(headerString);
+	if (index < 0){
+	  fprintf(stderr, "Column name not found. (%s/%s)\n", inputDirPath, inputName);
+	  free(headerString);
+	  free(headerRow);
+	  return -1;
+	}
+*/
+
+	//Create linked list of rows
+	Node* tempFront;
+	char* line;
+	while(line = readLine(inputFD)){
+	  Listing* temp = (Listing*)malloc(sizeof(Listing));
+	  if (!temp) {
+	    fprintf(stderr, "Out of memory.\n");
+	    free(line);
+	    freeLL(front);
+	    free(headerString);
+	    free(headerRow);
+	    return -1;
+	  }
+	  if (populateListing(headerIndexes, k, line, temp) < 0){
+	    fprintf(stderr, "Error parsing rows. (%s/%s)\n", inputDirPath, inputName);
+	    free(temp);
+	    free(line);
+	    free(headerString);
+	    free(headerRow);
+	    freeLL(front);
+	    return -1;
+	  }
+	  tempFront = insertNode(tempFront, temp);
+	  numRows++;
+	  free(line);
+	}
+
+	//Append list to global list
+	appendList(tempFront);
+
+	//MOVE REST OF CODE TO MAIN
+
+	//Moving link list to array of listings
+	data = (Listing**)malloc(numRows*sizeof(Listing*));
+	if (!data){
+	  fprintf(stderr, "Out of memory.\n");
+	  free(headerString);
+	  free(headerRow);
+	  freeLL(front);
+	  return -1;
+	}
+	int i = numRows-1;
+	while(front != NULL){
+	  data[i--] = front->element;
+		Node* temp = front;
+		front = front->next;
+		free(temp);
+	}
+	
+	//Set COI for all rows
+	int COIindex = findI(columnName);
+	if(COIindex < 0){
+		fprintf(stderr, "Unrecognized sorting column name.\n");
+		return -1;
+	}
+	for (i = 0; i < numRows; i++){
+		data[i]->COI = getListingField(data[i], COIIndex);
+	}
+
+	//Determine datatype of COI
+	columnType = 0;
+	for (i = 0; i < numRows; i++) {
+		char* COItemp = data[i]->COI;
+		if (!COItemp) continue;
+		int j, done = 0;
+		for (j = 0; j < strlen(COItemp); j++) {
+			if (isdigit(COItemp[j]) == 0 && COItemp[j] != '.' && COItemp[j] != '-') {
+				columnType = 1;
+				done = 1;
+				break;
+			}
+		}
+		if (done == 1) break;
+	}
+	
+	//Create int array for sorting
+	indexArray = (int*)malloc(numRows*sizeof(int));
+	for (i = 0; i < numRows; i++){
+		indexArray[i] = i;
+	}
+
+	//Sort!
+	if (mergeSort(indexArray, 0, numRows - 1) != 0){
+	  fprintf(stderr, "Error sorting. (%s)\n", inputName);
+	  free(headerString);
+	  free(indexArray);
+	  freeArray(data, numRows);
+	  return -1;
+	}
 
     //Set up output file
     char outputFile[strlen(outputDirPath) + 1 + strlen(inputName) + 8 + strlen(columnName) + 1];

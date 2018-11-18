@@ -14,15 +14,34 @@ int endsWith(char* str, char* suffix){
   return 0;
 }
 
-void insertNode(Listing* input){
-	Node* newNode = (Node*) malloc(sizeof(Node));
-	newNode->element = input;
-	newNode->next = front;
-	front = newNode;
+int findI(char* str){
+  int i;
+  for(i = 0; i < 28, i++){
+    if(strcmp(reference[i], removeWhitespace(str)) == 0) return i;
+  }
+  return -1;
+}
+
+void appendList(Node* input){ //Concatenates a temporary list to global common list
+	if(!front){
+    front = input;
+    return;
+  }
+  Node* ptr = front;
+  while(ptr->next) ptr = ptr->next;
+  ptr->next = input;
 	return;
 }
 
-int findHeader(char* headerString){
+Node* insertNode(Node* list, Listing* input){ //Inserts a node into a temporary list
+	Node* newNode = (Node*) malloc(sizeof(Node));
+  if(!newNode) return NULL;
+	newNode->element = input;
+	newNode->next = list;
+	return newNode;
+}
+
+/*int findHeader(char* headerString){
   char* trimmedHeader = removeWhitespace(headerString);
   char temp[strlen(trimmedHeader) + 1]; //For storing the current column value
   temp[0] = '\0';
@@ -43,12 +62,138 @@ int findHeader(char* headerString){
       currentIndex++;
     }
   }
-  numColumns = currentIndex;
+  //numColumns = currentIndex;
   free(trimmedHeader);
   return targetIndex;
+}*/
+
+char* getListingField(Listing* listing, int index){
+  switch(index){
+    case 0:
+      return listing->color;
+    case 1:
+      return listing->director_name;
+    case 2:
+      return listing->num_critic_for_reviews;
+    case 3:
+      return listing->duration;
+    case 4:
+      return listing->director_facebook_likes;
+    case 5:
+      return listing->actor_3_facebook_likes;
+    case 6:
+      return listing->actor_2_name;
+    case 7:
+      return listing->actor_1_facebook_likes;
+    case 8:
+      return listing->gross;
+    case 9:
+      return listing->genres;
+    case 10:
+      return listing->actor_1_name;
+    case 11:
+      return listing->movie_title;
+    case 12:
+      return listing->num_voted_users;
+    case 13:
+      return listing->cast_total_facebook_likes;
+    case 14:
+      return listing->actor_3_name;
+    case 15:
+      return listing->facenumber_in_poster;
+    case 16:
+      return listing->plot_keywords;
+    case 17:
+      return listing->movie_imdb_link;
+    case 18:
+      return listing->num_user_for_reviews;
+    case 19:
+      return listing->language;
+    case 20:
+      return listing->country;
+    case 21:
+      return listing->content_rating;
+    case 22:
+      return listing->budget;
+    case 23:
+      return listing->title_year;
+    case 24:
+      return listing->actor_2_facebook_likes;
+    case 25:
+      return listing->imdb_score;
+    case 26:
+      return listing->aspect_ratio;    
+    case 27:
+      return listing->movie_facebook_likes;    
+    default:
+      return NULL; //random bs case
+  }
 }
 
-int populateListing(int index, char* line, Listing* listing){
+void setListingField(Listing* listing, int index, char* str){
+  switch(index){
+    case 0:
+      listing->color = str;
+    case 1:
+      listing->director_name = str;
+    case 2:
+      listing->num_critic_for_reviews = str;
+    case 3:
+      listing->duration = str;
+    case 4:
+      listing->director_facebook_likes = str;
+    case 5:
+      listing->actor_3_facebook_likes = str;
+    case 6:
+      listing->actor_2_name = str;
+    case 7:
+      listing->actor_1_facebook_likes = str;
+    case 8:
+      listing->gross = str;
+    case 9:
+      listing->genres = str;
+    case 10:
+      listing->actor_1_name = str;
+    case 11:
+      listing->movie_title = str;
+    case 12:
+      listing->num_voted_users = str;
+    case 13:
+      listing->cast_total_facebook_likes = str;
+    case 14:
+      listing->actor_3_name = str;
+    case 15:
+      listing->facenumber_in_poster = str;
+    case 16:
+      listing->plot_keywords = str;
+    case 17:
+      listing->movie_imdb_link = str;
+    case 18:
+      listing->num_user_for_reviews = str;
+    case 19:
+      listing->language = str;
+    case 20:
+      listing->country = str;
+    case 21:
+      listing->content_rating = str;
+    case 22:
+      listing->budget = str;
+    case 23:
+      listing->title_year = str;
+    case 24:
+      listing->actor_2_facebook_likes = str;
+    case 25:
+      listing->imdb_score = str;
+    case 26:
+      listing->aspect_ratio = str;    
+    case 27:
+      listing->movie_facebook_likes = str;    
+    default:
+      listing->COI = NULL; //random bs case
+  }
+}
+
+int populateListing(int* indexArr, int indexArrL, char* line, Listing* listing){
   //Copy entire string to listing
   char* temp = (char*) malloc((strlen(line) + 1) * sizeof(char));
   if (!temp) return -1;
@@ -63,24 +208,22 @@ int populateListing(int index, char* line, Listing* listing){
   int currentIndex = 0;
   char* token;
   while ((token = strsep(&trimmedLine, ","))){ //Parse through commas
-    if (currentIndex == index){
-      strcat(col, token);
-    }
+    strcat(col, token);
+    setListingField(listing, indexArr[currentIndex], col);
     numQuotes += numChars(token, '"');
     if (numQuotes % 2 == 1){ //Check if comma is part of string
-      if (currentIndex == index){
-	strcat(col, ",");
-      }
+      strcat(col, ",");
+      setListingField(listing, indexArr[currentIndex], col);
     } else {
       currentIndex++;
     }
   }
-  if (currentIndex != numColumns){ //Check number of columns match
+  if (currentIndex != indexArrL){ //Check number of columns match
     free(temp);
     free(trimmedLine);
     return -1;
   }
-  if (col[0] == '\0'){
+  /*if (col[0] == '\0'){
     listing->COI = NULL;
   } else {
     char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
@@ -96,10 +239,10 @@ int populateListing(int index, char* line, Listing* listing){
     if (trimmed[0] == '"'){ //Crop off quotes
       char* noQuotes = (char*) malloc((strlen(trimmed) - 1) * sizeof(char));
       if (!noQuotes){
-	free(temp);
-	free(trimmedLine);
-	free(trimmed);
-	return -1;
+        free(temp);
+        free(trimmedLine);
+        free(trimmed);
+        return -1;
       }
       trimmed[strlen(trimmed) - 1] = '\0';
       strcpy(noQuotes, &(trimmed[1]));
@@ -108,7 +251,7 @@ int populateListing(int index, char* line, Listing* listing){
       free(noQuotes);
     } 
     listing->COI = trimmed;
-  }
+  }*/
   free(trimmedLine);
   return 0;
 }
