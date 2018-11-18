@@ -50,12 +50,9 @@ typedef struct DirThreadArgs {
 
 //Global variables
 Node* front; //Linked List to count rows of entries
-Listing** data;
 int numRows = 0;
 int* indexArray;
 char* columnName;
-//int columnType; //0 for double, 1 for string
-//int numColumns;
 char* inputDirPath;
 char* outputDirPath;
 int firstProc; 

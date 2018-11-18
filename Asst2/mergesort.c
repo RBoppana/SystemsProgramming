@@ -30,32 +30,6 @@ Node* insertNode(Node* list, Listing* input){ //Inserts a node into a temporary 
 	return newNode;
 }
 
-/*int findHeader(char* headerString){
-  char* trimmedHeader = removeWhitespace(headerString);
-  char temp[strlen(trimmedHeader) + 1]; //For storing the current column value
-  temp[0] = '\0';
-  int numQuotes = 0;
-  int currentIndex = 0;
-  int targetIndex = -1;
-  char* token;
-  while ((token = strsep(&trimmedHeader, ","))){
-    strcat(temp, token);
-    numQuotes += numChars(token, '"');
-    if (numQuotes % 2 == 1){ //Check if comma is part of string
-      strcat(temp, ",");
-    } else if (strcmp(temp, columnName) == 0) { //If not, check the name
-      targetIndex = currentIndex;
-      currentIndex++;
-    } else {
-      temp[0] = '\0'; //Set string to empty
-      currentIndex++;
-    }
-  }
-  //numColumns = currentIndex;
-  free(trimmedHeader);
-  return targetIndex;
-}*/
-
 char* getListingField(Listing* listing, int index){
   switch(index){
     case 0:
