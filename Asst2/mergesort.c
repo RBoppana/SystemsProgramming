@@ -22,17 +22,6 @@ int findI(char* str){
   return -1;
 }
 
-void appendList(Node* input){ //Concatenates a temporary list to global common list
-	if(!front){
-    front = input;
-    return;
-  }
-  Node* ptr = front;
-  while(ptr->next) ptr = ptr->next;
-  ptr->next = input;
-	return;
-}
-
 Node* insertNode(Node* list, Listing* input){ //Inserts a node into a temporary list
 	Node* newNode = (Node*) malloc(sizeof(Node));
   if(!newNode) return NULL;

@@ -73,13 +73,13 @@ int main(int argc, char** argv){
     DirThreadArgs* argument = (DirThreadArgs*) malloc(sizeof(DirThreadArgs));
     argument->inputDirPath = inputDirPath;
     argument.threadNo = 0;
-    int procs = (int)(intptr_t) directoryThread(argument);
-    if (procs < 0){
+    int threads = (int)(intptr_t) directoryThread(argument);
+    if (threads < 0){
       fprintf(stderr, "Error while traversing input directory.\n");
       return -1;
     }
     
-    fprintf(stdout, "\nTotal number of processes: %d\n", procs);
+    fprintf(stdout, "\nTotal number of threads: %d\n", threads);
 
     return 0;
 }
@@ -146,14 +146,77 @@ void* directoryThread(void* args){
 
 //Function for threads that process files
 void* fileThread(void* args){
-    if (de->d_type == DT_REG && endsWith(de->d_name, ".csv") == 1){
+    if (de->d_type != DT_REG || endsWith(de->d_name, ".csv") != 1){
+        fprintf(stderr, "Not a CSV file. (%s)\n", args->inputDirPath);
+    }
 
-    //Populate temporary linked list
+    int inputFD = open(inputFile, O_RDONLY);
+    if (inputFD < 0){
+        fprintf(stderr, "Unable to open input file. (%s)\n", args->inputDirPath);
+        return (void*) -1;
+    }
 
-    //Add it to the global list if format is correct
+    //Header line processing
+    int headerIndexes[28];
+    char* headerString = readLine(inputFD);
+    if (!headerString){
+        fprintf(stderr, "Header row missing. (%s)\n", args->inputDirPath);
+        return (void*) -1;
+    }
+    int k = 0;
+    char* token = strtok_r(headerString, ",");
+    while (token != NULL){
+        int x = findI(token);
+        if(x > -1){
+            headerIndexes[k++] = x;
+        } else {
+            fprintf(stderr, "Not movie data. (%s)\n", args->inputDirPath);
+            return (void*) -1;
+        }
+        token = strtok_r(NULL, ",");
+    }
 
+    //Create temporary linked list of rows
+    Node* tempFront;
+    char* line;
+    while(line = readLine(inputFD)){
+        Listing* temp = (Listing*) malloc(sizeof(Listing));
+        if (!temp) {
+            fprintf(stderr, "Out of memory.\n");
+            free(temp);
+            free(line);
+            free(headerString);
+            freeLL(tempFront);
+            return (void*) -1;
+        }
+        if (populateListing(headerIndexes, k, line, temp) < 0){
+            fprintf(stderr, "Error parsing rows. (%s)\n", args->inputDirPath);
+            free(temp);
+            free(line);
+            free(headerString);
+            freeLL(tempFront);
+            return (void*) -1;
+        }
+        tempFront = insertNode(tempFront, temp);
+        numRows++;
+        free(line);
+    }
 
+    //Append list to global list
+    pthread_mutex_lock(&LLMutex);
+    if(!front){
+        front = tempFront;
+    } else {
+        Node* ptr = tempFront;
+        while(ptr->next) ptr = ptr->next;
+        ptr->next = front;
+        front = tempFront;
+    }
+    pthread_mutex_unlock(&LLMutex);
+
+    return (void*) 0;
 }
+
 
 void* traverseDir(DIR* inputDir, int firstThread){
   int totalThreads = 0;
@@ -233,6 +296,7 @@ void* traverseDir(DIR* inputDir, int firstThread){
   return totalProcs;
 }
 
+
 int sortCSV(char* inputName){
   //Set up input file
   char inputFile[strlen(inputDirPath) + 1 + strlen(inputName) + 1];
@@ -259,7 +323,7 @@ int sortCSV(char* inputName){
 	strcpy(headerRow, headerString);
 
 	int k = 0;
-	char* token = strtok(headerRow, ",\n");
+	char* token = strtok_r(headerRow, ",");
 	while(token != NULL){
 		int x = findI(token);
 		if(x > -1){
@@ -268,7 +332,7 @@ int sortCSV(char* inputName){
 			fprintf(stderr, "Not movie data. (%s/%s)\n", inputDirPath, inputName);
 			return -1;
 		}
-		token = strtok(NULL, ",\n");
+		token = strtok_r(NULL, ",");
 	}
 
 /*
