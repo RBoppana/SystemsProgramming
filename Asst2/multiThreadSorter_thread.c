@@ -70,7 +70,10 @@ int main(int argc, char** argv){
     fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
     fflush(stdout);
 
-    int procs = traverseDir(inputDir);
+    DirThreadArgs* argument = (DirThreadArgs*) malloc(sizeof(DirThreadArgs));
+    argument->inputDirPath = inputDirPath;
+    argument.threadNo = 0;
+    int procs = (int)(intptr_t) directoryThread(argument);
     if (procs < 0){
       fprintf(stderr, "Error while traversing input directory.\n");
       return -1;
@@ -79,11 +82,6 @@ int main(int argc, char** argv){
     fprintf(stdout, "\nTotal number of processes: %d\n", procs);
 
     return 0;
-}
-
-//Loop through top level 
-void* traverseDir(DIR* input){
-
 }
 
 //Function for threads that process subdirectories
@@ -96,6 +94,10 @@ void* directoryThread(void* args){
 
     int totalThreads = 0;
     DIR* inputDir = opendir(args->inputDirPath);
+    if (!inputDir){
+        fprintf(stderr, "Directory not found.\n");
+        return (void*) -1;
+    }
     struct direct* de;
     int fileObjects = 0;
     
@@ -118,26 +120,38 @@ void* directoryThread(void* args){
         char temp[strlen(args->inputDirPath) + 1 + strlen(de->d_name) + 1];
         snprintf(temp, sizeof(temp), "%s/%s", args->inputDirPath, de->d_name);
         argument->inputDirPath = temp;
-        argument.threadNo = args.threadNo + 1;
+        argument.threadNo = args.threadNo + i + 1;
 
         //Create thread
-        pthread_t thread;
-        int result = pthread_create(&thread, NULL, directoryThread, argument);
+        int result;
+        if (de->d_type == DT_DIR){
+            result = pthread_create(&threads[i], NULL, directoryThread, argument);
+        } else {
+            result = pthread_create(&threads[i], NULL, fileThread, argument);
+        }
         if (result != 0){
             fprintf(stderr, "Error creating thread\n");
             return (void*) -1;
         }
+    }
 
-        //Add number of child threads
+    //Wait for all threads to finish
+    for (i = 0; i < fileObjects; i++){
         void* status;
-        pthread_join(thread, &status);
-        if ((int)(intptr_t) status < 0) return (void*) -1;
+        pthread_join(threads[i], &status);
+        if ((int)(intptr_t) status < 0) return (void*) -1;    
         else totalThreads += (int)(intptr_t) status + 1;
     }
 }
 
 //Function for threads that process files
-void* fileThread(){
+void* fileThread(void* args){
+    if (de->d_type == DT_REG && endsWith(de->d_name, ".csv") == 1){
+
+    //Populate temporary linked list
+
+    //Add it to the global list if format is correct
+
 
 }
 
