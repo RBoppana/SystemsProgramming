@@ -72,20 +72,21 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    //Print metadata
-    fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
-    fflush(stdout);
-
+    //Create thread for top level input directory
+    TID = 1;
     ThreadArgs* argument = (ThreadArgs*) malloc(sizeof(ThreadArgs));
     argument->inputDirPath = inputDirPath;
-    argument->threadNo = 0;
-    int threads = (int)(intptr_t) directoryThread(argument);
-    if (threads < 0){
-        fprintf(stderr, "Error while traversing input directory.\n");
+    pthread_t thread;
+    int result = pthread_create(&thread, NULL, directoryThread, argument);
+    if (result != 0){
+        fprintf(stderr, "Error creating main thread\n");
         return -1;
     }
-    
-    fprintf(stdout, "\nTotal number of threads: %d\n", threads);
+
+    //Wait for all input reading to finish
+    void* status;
+    pthread_join(threads[i], &status);
+    if ((int)(intptr_t) status < 0) return -1;
 
     //Moving link list to array of listings
     Listing* data[numRows];
@@ -158,14 +159,7 @@ int main(int argc, char** argv){
 
 //Function for threads that process subdirectories
 void* directoryThread(void* argument){
-  ThreadArgs* args = (ThreadArgs*) argument;
-
-    //Print TID
-    pthread_mutex_lock(&TIDMutex);
-    if (args->threadNo == 1) fprintf(stdout, "%lu", (unsigned long) pthread_self());
-    else if (args->threadNo > 1) fprintf(stdout, ", %lu", (unsigned long) pthread_self());
-    pthread_mutex_unlock(&TIDMutex);
-
+    ThreadArgs* args = (ThreadArgs*) argument;
     int totalThreads = 0;
     DIR* inputDir = opendir(args->inputDirPath);
     if (!inputDir){
@@ -194,7 +188,6 @@ void* directoryThread(void* argument){
         char temp[strlen(args->inputDirPath) + 1 + strlen(de->d_name) + 1];
         snprintf(temp, sizeof(temp), "%s/%s", args->inputDirPath, de->d_name);
         argument->inputDirPath = temp;
-        argument->threadNo = args->threadNo + i + 1;
 
         //Create thread
         int result;
@@ -216,6 +209,19 @@ void* directoryThread(void* argument){
         if ((int)(intptr_t) status < 0) return (void*) -1;    
         else totalThreads += (int)(intptr_t) status + 1;
     }
+
+    //Print metadata
+    pthread_mutex_lock(&stdoutMutex);
+    fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: %d", getpid(), TID);
+    int tid;
+    for (tid = TID + 1; tid < TID + fileObjects; tid++){
+        fprintf(stdout, ", %d", tid);
+
+    }
+    fprintf(stdout, "\nTotal number of threads: %d\n", totalThreads);
+    pthread_mutex_unlock(&stdoutMutex);
+    
+    return (void*) totalThreads;
 }
 
 //Function for threads that process files

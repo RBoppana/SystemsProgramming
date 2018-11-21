@@ -45,21 +45,20 @@ typedef struct Node {
 
 typedef struct ThreadArgs {
 	char* inputDirPath;
-	int threadNo;
 } ThreadArgs;
 
 //Global variables
+int TID;
 Node* front; //Linked List to count rows of entries
 int numRows = 0;
 int* indexArray;
 char* columnName;
 char* inputDirPath;
 char* outputDirPath;
-int firstProc; 
 char* reference[28] = {"color","director_name","num_critic_for_reviews","duration","director_facebook_likes","actor_3_facebook_likes","actor_2_name","actor_1_facebook_likes","gross","genres","actor_1_name","movie_title","num_voted_users","cast_total_facebook_likes","actor_3_name","facenumber_in_poster","plot_keywords","movie_imdb_link","num_user_for_reviews","language","country","content_rating","budget","title_year","actor_2_facebook_likes","imdb_score","aspect_ratio","movie_facebook_likes"}; 
 char* TIDs;
 pthread_mutex_t LLMutex;
-pthread_mutex_t TIDMutex;
+pthread_mutex_t stdoutMutex;
 
 void* directoryThread(void* args);
 
