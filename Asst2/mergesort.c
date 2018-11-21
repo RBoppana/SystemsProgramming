@@ -186,35 +186,6 @@ int populateListing(int* indexArr, int indexArrL, char* line, Listing* listing){
     free(trimmedLine);
     return -1;
   }
-  /*if (col[0] == '\0'){
-    listing->COI = NULL;
-  } else {
-    char* new = (char*) malloc((strlen(col) + 1) * sizeof(char));
-    if (!new) {
-      free(temp);
-      free(trimmedLine);
-      return -1;
-    }  
-    strcpy(new, col);
-    char* trimmed = removeWhitespace(new); //Remove whitespace outside quotes
-    free(new);
-
-    if (trimmed[0] == '"'){ //Crop off quotes
-      char* noQuotes = (char*) malloc((strlen(trimmed) - 1) * sizeof(char));
-      if (!noQuotes){
-        free(temp);
-        free(trimmedLine);
-        free(trimmed);
-        return -1;
-      }
-      trimmed[strlen(trimmed) - 1] = '\0';
-      strcpy(noQuotes, &(trimmed[1]));
-      free(trimmed);
-      trimmed = removeWhitespace(noQuotes); //Remove whitespace inside quotes
-      free(noQuotes);
-    } 
-    listing->COI = trimmed;
-  }*/
   free(trimmedLine);
   return 0;
 }

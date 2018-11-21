@@ -127,10 +127,10 @@ int main(int argc, char** argv){
 
     //Sort!
     if (mergeSort(indexArray, 0, numRows - 1) != 0){
-      fprintf(stderr, "Error sorting. \n");
-      free(indexArray);
-      freeArray(data, numRows);
-      return -1;
+        fprintf(stderr, "Error sorting. \n");
+        free(indexArray);
+        freeArray(data, numRows);
+        return -1;
     }
 
     //Set up output file
@@ -138,11 +138,11 @@ int main(int argc, char** argv){
     snprintf(outputFile, sizeof(outputFile), "%s/AllFiles-sorted-%s.csv", outputDirPath, columnName);
     int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (outputFD < 0){
-      fprintf(stderr, "Unable to open/create output file.\n");
-      free(headerString);
-      free(indexArray);
-      freeArray(data, numRows);
-      return -1;
+        fprintf(stderr, "Unable to open/create output file.\n");
+        free(headerString);
+        free(indexArray);
+        freeArray(data, numRows);
+        return -1;
     }
     
     //Output data
