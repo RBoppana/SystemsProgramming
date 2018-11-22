@@ -96,72 +96,68 @@ char* getListingField(Listing* listing, int index){
 void setListingField(Listing* listing, int index, char* str){
   switch(index){
     case 0:
-      listing->color = str;
+      listing->color = str; break;
     case 1:
-      listing->director_name = str;
+      listing->director_name = str; break;
     case 2:
-      listing->num_critic_for_reviews = str;
+      listing->num_critic_for_reviews = str; break;
     case 3:
-      listing->duration = str;
+      listing->duration = str; break;
     case 4:
-      listing->director_facebook_likes = str;
+      listing->director_facebook_likes = str; break;
     case 5:
-      listing->actor_3_facebook_likes = str;
+      listing->actor_3_facebook_likes = str; break;
     case 6:
-      listing->actor_2_name = str;
+      listing->actor_2_name = str; break;
     case 7:
-      listing->actor_1_facebook_likes = str;
+      listing->actor_1_facebook_likes = str; break;
     case 8:
-      listing->gross = str;
+      listing->gross = str; break;
     case 9:
-      listing->genres = str;
+      listing->genres = str; break;
     case 10:
-      listing->actor_1_name = str;
+      listing->actor_1_name = str; break;
     case 11:
-      listing->movie_title = str;
+      listing->movie_title = str; break;
     case 12:
-      listing->num_voted_users = str;
+      listing->num_voted_users = str; break;
     case 13:
-      listing->cast_total_facebook_likes = str;
+      listing->cast_total_facebook_likes = str; break;
     case 14:
-      listing->actor_3_name = str;
+      listing->actor_3_name = str; break;
     case 15:
-      listing->facenumber_in_poster = str;
+      listing->facenumber_in_poster = str; break;
     case 16:
-      listing->plot_keywords = str;
+      listing->plot_keywords = str; break;
     case 17:
-      listing->movie_imdb_link = str;
+      listing->movie_imdb_link = str; break;
     case 18:
-      listing->num_user_for_reviews = str;
+      listing->num_user_for_reviews = str; break;
     case 19:
-      listing->language = str;
+      listing->language = str; break;
     case 20:
-      listing->country = str;
+      listing->country = str; break;
     case 21:
-      listing->content_rating = str;
+      listing->content_rating = str; break;
     case 22:
-      listing->budget = str;
+      listing->budget = str; break;
     case 23:
-      listing->title_year = str;
+      listing->title_year = str; break;
     case 24:
-      listing->actor_2_facebook_likes = str;
+      listing->actor_2_facebook_likes = str; break;
     case 25:
-      listing->imdb_score = str;
+      listing->imdb_score = str; break;
     case 26:
-      listing->aspect_ratio = str;    
+      listing->aspect_ratio = str; break;
     case 27:
-      listing->movie_facebook_likes = str;    
+      listing->movie_facebook_likes = str; break;
     default:
-      listing->COI = NULL; //random bs case
+      break; //random bs case
   }
 }
 
 int populateListing(int* indexArr, int indexArrL, char* line, Listing* listing){
-  //Copy entire string to listing
-  char* temp = (char*) malloc((strlen(line) + 1) * sizeof(char));
-  if (!temp) return -1;
-  strcpy(temp, line);
-  listing->row = temp;
+  int rowLength = 0;
   
   //Get string value of column of interest
   char* trimmedLine = removeWhitespace(line);
@@ -172,21 +168,33 @@ int populateListing(int* indexArr, int indexArrL, char* line, Listing* listing){
   char* token;
   while ((token = strsep(&trimmedLine, ","))){ //Parse through commas
     strcat(col, token);
-    setListingField(listing, indexArr[currentIndex], col);
     numQuotes += numChars(token, '"');
-    if (numQuotes % 2 == 1){ //Check if comma is part of string
+    if (numQuotes % 2 == 1){ //Comma is part of string
       strcat(col, ",");
+    } else { //Comma is delimiting CSV
       setListingField(listing, indexArr[currentIndex], col);
-    } else {
+      rowLength += strlen(col);
+      col[0] = '\0';
       currentIndex++;
     }
   }
+  free(trimmedLine);
   if (currentIndex != indexArrL){ //Check number of columns match
-    free(temp);
-    free(trimmedLine);
     return -1;
   }
-  free(trimmedLine);
+
+  //Create row string in correct order
+  char* temp = (char*) malloc(rowLength + 28);
+  if (!temp) {
+    return -1;
+  strcat(temp, getListingField(listing, 0));
+  int i;
+  for (i = 1; i < 28; i++){
+    strcat(temp, ",");
+    strcat(temp, getListingField(listing, i));
+  }
+  listing->row = temp;
+
   return 0;
 }
 

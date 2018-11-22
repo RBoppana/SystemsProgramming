@@ -85,7 +85,7 @@ int main(int argc, char** argv){
 
     //Wait for all input reading to finish
     void* status;
-    pthread_join(threads[i], &status);
+    pthread_join(threads, &status);
     if ((int)(intptr_t) status < 0) return -1;
 
     //Moving link list to array of listings
@@ -271,11 +271,14 @@ void* fileThread(void* argument){
         Listing* temp = (Listing*) malloc(sizeof(Listing));
         if (!temp) {
             fprintf(stderr, "Out of memory.\n");
-            free(temp);
             free(line);
             free(headerString);
             freeLL(tempFront);
             return (void*) -1;
+        }
+        int i;
+        for (i = 0; i < 28; i++){
+            setListingField(temp, i, NULL);
         }
         if (populateListing(headerIndexes, k, line, temp) < 0){
             fprintf(stderr, "Error parsing rows. (%s)\n", args->inputDirPath);
