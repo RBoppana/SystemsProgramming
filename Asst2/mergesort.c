@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <dirent.h>
-#include "scannerCSVsorter.h"
+#include "multiThreadSorter_thread.h"
 
 int endsWith(char* str, char* suffix){
   int index = strlen(str) - strlen(suffix);
@@ -16,7 +16,7 @@ int endsWith(char* str, char* suffix){
 
 int findI(char* str){
   int i;
-  for(i = 0; i < 28, i++){
+  for(i = 0; i < 28; i++){
     if(strcmp(reference[i], str) == 0) return i;
   }
   return -1;
@@ -194,6 +194,7 @@ int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, L
   char* temp = (char*) malloc(rowLength + 28);
   if (!temp) {
     return -1;
+  }
   strcat(temp, getListingField(listing, 0));
   int i;
   for (i = 1; i < 28; i++){
@@ -204,7 +205,7 @@ int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, L
   free(temp);
 
   //Set column of interest
-  char* trimmed = removeWhitespace(getListingField[targetIndex]); //Remove whitespace and quotes
+  char* trimmed = removeWhitespace(getListingField(listing, targetIndex)); //Remove whitespace and quotes
   listing->COI = trimmed;
 
   return 0;

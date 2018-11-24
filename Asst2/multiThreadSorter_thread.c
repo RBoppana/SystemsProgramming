@@ -12,6 +12,12 @@
 #define USAGE "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
 
 int main(int argc, char** argv){
+  //Initialize globals
+  numRows = 0;
+  reference[0] = "color";
+  reference[1] = "director_name";
+  reference[2] = "num_critic_for_reviews";
+"duration","director_facebook_likes","actor_3_facebook_likes","actor_2_name","actor_1_facebook_likes","gross","genres","actor_1_name","movie_title","num_voted_users","cast_total_facebook_likes","actor_3_name","facenumber_in_poster","plot_keywords","movie_imdb_link","num_user_for_reviews","language","country","content_rating","budget","title_year","actor_2_facebook_likes","imdb_score","aspect_ratio","movie_facebook_likes"}; 
 
     //Handle flags
     int columnSet = 0, inputSet = 0, outputSet = 0;
@@ -89,7 +95,12 @@ int main(int argc, char** argv){
     if ((int)(intptr_t) status < 0) return -1;
 
     //Moving link list to array of listings
-    Listing* data[numRows];
+    data = (Listing**) malloc(numRows * sizeof(Listing*));
+    if (!data){
+      fprintf(stderr, "Out of memory.\n");
+      freeLL(front);
+      return -1;
+    }
     int i = numRows-1;
     while(front != NULL){
         data[i--] = front->element;
@@ -99,7 +110,7 @@ int main(int argc, char** argv){
     }
 
     //Determine datatype of COI
-    int columnType = 0;
+    columnType = 0;
     for (i = 0; i < numRows; i++) {
         char* COItemp = data[i]->COI;
         if (!COItemp) continue;
@@ -151,12 +162,15 @@ int main(int argc, char** argv){
 
 //Function for threads that process subdirectories
 void* directoryThread(void* argument){
-    ThreadArgs* args = (ThreadArgs*) argument;
+    ThreadArgs* args = argument;
+    int* returnValue = (int*) malloc(sizeof(int));
+    *returnValue = -1;
     int totalThreads = 0;
     DIR* inputDir = opendir(args->inputDirPath);
     if (!inputDir){
         fprintf(stderr, "Directory not found.\n");
-        return (void*) -1;
+        free(args);
+	return (void*) returnValue;
     }
     struct dirent* de;
     int fileObjects = 0;
@@ -190,7 +204,8 @@ void* directoryThread(void* argument){
         }
         if (result != 0){
             fprintf(stderr, "Error creating thread\n");
-            return (void*) -1;
+            free(args);
+	    return (void*) returnValue;
         }
     }
 
@@ -198,8 +213,11 @@ void* directoryThread(void* argument){
     for (i = 0; i < fileObjects; i++){
         void* status;
         pthread_join(threads[i], &status);
-        if ((int)(intptr_t) status < 0) return (void*) -1;    
-        else totalThreads += (int)(intptr_t) status + 1;
+        if ((int)(intptr_t) status < 0){
+	  free(args);
+	  return (void*) returnValue;
+	}
+        else totalThreads += *(int*)(intptr_t)status + 1;
     }
 
     //Print metadata
@@ -213,12 +231,14 @@ void* directoryThread(void* argument){
     fprintf(stdout, "\nTotal number of threads: %d\n", totalThreads);
     pthread_mutex_unlock(&stdoutMutex);
     
-    return (void*) totalThreads;
+    free(args);
+    *returnValue = totalThreads;
+    return (void*) returnValue;
 }
 
 //Function for threads that process files
 void* fileThread(void* argument){
-  ThreadArgs* args = (ThreadArgs*) argument;  
+  ThreadArgs* args = argument;  
 
   if (endsWith(args->inputDirPath, ".csv") != 1){
         fprintf(stderr, "Not a CSV file. (%s)\n", args->inputDirPath);
@@ -227,6 +247,7 @@ void* fileThread(void* argument){
     int inputFD = open(args->inputDirPath, O_RDONLY);
     if (inputFD < 0){
         fprintf(stderr, "Unable to open input file. (%s)\n", args->inputDirPath);
+	free(args);
         return (void*) -1;
     }
 
@@ -235,7 +256,8 @@ void* fileThread(void* argument){
     char* headerString = readLine(inputFD);
     if (!headerString){
         fprintf(stderr, "Header row missing. (%s)\n", args->inputDirPath);
-        return (void*) -1;
+        free(args);
+	return (void*) -1;
     }
     int k = 0;
     char* savePtr;
@@ -246,12 +268,14 @@ void* fileThread(void* argument){
             k++;
             if (k > 27){
                 fprintf(stderr, "Too many columns. (%s)\n", args->inputDirPath);
-                return (void*) -1;
+                free(args);
+		return (void*) -1;
             } 
             headerIndexes[k++] = x;
         } else {
             fprintf(stderr, "Improper column name. (%s)\n", args->inputDirPath);
-            return (void*) -1;
+            free(args);
+	    return (void*) -1;
         }
         token = strtok_r(NULL, ",", &savePtr);
     }
@@ -267,15 +291,16 @@ void* fileThread(void* argument){
             free(line);
             free(headerString);
             freeLL(tempFront);
+	    free(args);
             return (void*) -1;
         }
-        int i;
         if (populateListing(headerIndexes, k, findI(columnName), line, temp) < 0){
             fprintf(stderr, "Error parsing rows. (%s)\n", args->inputDirPath);
             free(temp);
             free(line);
             free(headerString);
             freeLL(tempFront);
+	    free(args);
             return (void*) -1;
         }
         tempFront = insertNode(tempFront, temp);
@@ -296,5 +321,6 @@ void* fileThread(void* argument){
     numRows += rows;
     pthread_mutex_unlock(&LLMutex);
 
+    free(args);
     return (void*) 0;
 }
