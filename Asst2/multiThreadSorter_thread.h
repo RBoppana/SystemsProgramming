@@ -1,11 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/*stypedef struct Listing {
-  char* row;
-  char* COI;
-} Listing; */
-
 typedef struct Listing{
 	char* color;
 	char* director_name;

@@ -143,7 +143,6 @@ int main(int argc, char** argv){
     printData(outputFD, numRows);
     
     //Freedom at last
-    free(headerString);
     free(indexArray);
     freeArray(data, numRows);
 
@@ -260,6 +259,7 @@ void* fileThread(void* argument){
     //Create temporary linked list of rows
     Node* tempFront;
     char* line;
+    int rows;
     while((line = readLine(inputFD))){
         Listing* temp = (Listing*) malloc(sizeof(Listing));
         if (!temp) {
@@ -279,7 +279,7 @@ void* fileThread(void* argument){
             return (void*) -1;
         }
         tempFront = insertNode(tempFront, temp);
-        numRows++;
+        rows++;
         free(line);
     }
 
@@ -293,6 +293,7 @@ void* fileThread(void* argument){
         ptr->next = front;
         front = tempFront;
     }
+    numRows += rows;
     pthread_mutex_unlock(&LLMutex);
 
     return (void*) 0;

@@ -341,8 +341,36 @@ void freeArray(Listing** data, int numRows){
   }
 }
 
-void freeListing(Listing* data){
-  free(data->COI);
-  free(data->row);
-  free(data);
+void freeListing(Listing* listing){
+  free(listing->color);
+  free(listing->director_name;
+      return listing->num_critic_for_reviews;
+      return listing->duration;
+      return listing->director_facebook_likes;
+      return listing->actor_3_facebook_likes;
+      return listing->actor_2_name;
+      return listing->actor_1_facebook_likes;
+      return listing->gross;
+      return listing->genres;
+      return listing->actor_1_name;
+      return listing->movie_title;
+      return listing->num_voted_users;
+      return listing->cast_total_facebook_likes;
+      return listing->actor_3_name;
+      return listing->facenumber_in_poster;
+      return listing->plot_keywords;
+      return listing->movie_imdb_link;
+      return listing->num_user_for_reviews;
+      return listing->language;
+      return listing->country;
+      return listing->content_rating;
+      return listing->budget;
+      return listing->title_year;
+      return listing->actor_2_facebook_likes;
+      return listing->imdb_score;
+      return listing->aspect_ratio;
+      return listing->movie_facebook_likes;
+  free(listing->COI);
+  free(listing->row);
+  free(listing);
 }
