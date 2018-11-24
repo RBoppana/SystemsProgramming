@@ -14,10 +14,33 @@
 int main(int argc, char** argv){
   //Initialize globals
   numRows = 0;
-  reference[0] = "color";
-  reference[1] = "director_name";
-  reference[2] = "num_critic_for_reviews";
-"duration","director_facebook_likes","actor_3_facebook_likes","actor_2_name","actor_1_facebook_likes","gross","genres","actor_1_name","movie_title","num_voted_users","cast_total_facebook_likes","actor_3_name","facenumber_in_poster","plot_keywords","movie_imdb_link","num_user_for_reviews","language","country","content_rating","budget","title_year","actor_2_facebook_likes","imdb_score","aspect_ratio","movie_facebook_likes"}; 
+    reference[0] = "color";
+    reference[1] = "director_name";
+    reference[2] = "num_critic_for_reviews";
+    reference[3] = "duration";
+    reference[4] = "director_facebook_likes";
+    reference[5] = "actor_3_facebook_likes";
+    reference[6] = "actor_2_name";
+    reference[7] = "actor_1_facebook_likes";
+    reference[8] = "gross";
+    reference[9] = "genres";
+    reference[10] = "actor_1_name";
+    reference[11] = "movie_title";
+    reference[12] = "num_voted_users";
+    reference[13] = "cast_total_facebook_likes";
+    reference[14] = "actor_3_name";
+    reference[15] = "facenumber_in_poster";
+    reference[16] = "plot_keywords";
+    reference[17] = "movie_imdb_link";
+    reference[18] = "num_user_for_reviews";
+    reference[19] = "language";
+    reference[20] = "country";
+    reference[21] = "content_rating";
+    reference[22] = "budget";
+    reference[23] = "title_year";
+    reference[24] = "actor_2_facebook_likes";
+    reference[25] = "imdb_score";
+    reference[26] = "aspect_ratio";
 
     //Handle flags
     int columnSet = 0, inputSet = 0, outputSet = 0;
