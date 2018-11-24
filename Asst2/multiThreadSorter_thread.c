@@ -85,7 +85,7 @@ int main(int argc, char** argv){
 
     //Wait for all input reading to finish
     void* status;
-    pthread_join(threads, &status);
+    pthread_join(thread, &status);
     if ((int)(intptr_t) status < 0) return -1;
 
     //Moving link list to array of listings
@@ -134,7 +134,6 @@ int main(int argc, char** argv){
     int outputFD = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (outputFD < 0){
         fprintf(stderr, "Unable to open/create output file.\n");
-        free(headerString);
         free(indexArray);
         freeArray(data, numRows);
         return -1;
