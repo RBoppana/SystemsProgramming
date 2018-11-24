@@ -17,7 +17,7 @@ int endsWith(char* str, char* suffix){
 int findI(char* str){
   int i;
   for(i = 0; i < 28, i++){
-    if(strcmp(reference[i], removeWhitespace(str)) == 0) return i;
+    if(strcmp(reference[i], str) == 0) return i;
   }
   return -1;
 }
@@ -156,29 +156,36 @@ void setListingField(Listing* listing, int index, char* str){
   }
 }
 
-int populateListing(int* indexArr, int indexArrL, char* line, Listing* listing){
+int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, Listing* listing){
   int rowLength = 0;
   
   //Get string value of column of interest
-  char* trimmedLine = removeWhitespace(line);
-  char col[strlen(trimmedLine) + 1];
+  char col[strlen(line) + 1];
   col[0] = '\0';
   int numQuotes = 0;
   int currentIndex = 0;
   char* token;
-  while ((token = strsep(&trimmedLine, ","))){ //Parse through commas
+  while ((token = strsep(&line, ","))){ //Parse through commas
     strcat(col, token);
     numQuotes += numChars(token, '"');
     if (numQuotes % 2 == 1){ //Comma is part of string
-      strcat(col, ",");
+        strcat(col, ",");
     } else { //Comma is delimiting CSV
-      setListingField(listing, indexArr[currentIndex], col);
-      rowLength += strlen(col);
-      col[0] = '\0';
-      currentIndex++;
+      if (col[0] == '\0'){
+        setListingField(listing, indexArr[currentIndex], NULL);
+      } else {
+        char* new = (char*) malloc(strlen(col) + 1);
+        if (!new) {
+          return -1;
+        }
+        strcpy(new, col);
+        setListingField(listing, indexArr[currentIndex], new);
+        rowLength += strlen(col);
+        col[0] = '\0';
+        currentIndex++;
+      }
     }
   }
-  free(trimmedLine);
   if (currentIndex != indexArrL){ //Check number of columns match
     return -1;
   }
@@ -194,6 +201,11 @@ int populateListing(int* indexArr, int indexArrL, char* line, Listing* listing){
     strcat(temp, getListingField(listing, i));
   }
   listing->row = temp;
+  free(temp);
+
+  //Set column of interest
+  char* trimmed = removeWhitespace(getListingField[targetIndex]); //Remove whitespace and quotes
+  listing->COI = trimmed;
 
   return 0;
 }
@@ -233,16 +245,17 @@ int numChars(char* string, char character){
   return count;
 }
 
+//Removes whitespace and quotes around a string
 char* removeWhitespace(char* string){
   int start, end;
   int i;
   for (i = 0; i < strlen(string); i++){ //Preceding whitespace
-    if (isspace(string[i])) continue;
+    if (isspace(string[i]) || string[i] == '"') continue;
     start = i;
     break; 
   }
   for (i = strlen(string) - 1; i >= 0; i--){ //Proceding whitespace
-    if (isspace(string[i])) continue;
+    if (isspace(string[i]) || string[i] == '"') continue;
     end = i;
     break;
   }
@@ -303,8 +316,8 @@ int mergeSort(int* indexes, int first, int last){
   return 0;
 }
 
-void printData(int fd, char* headerRow, int numRows){
-  write(fd, headerRow, strlen(headerRow));
+void printData(int fd, int numRows){
+  write(fd, "color,director_name,num_critic_for_reviews,duration,director_facebook_likes,actor_3_facebook_likes,actor_2_name,actor_1_facebook_likes,gross,genres,actor_1_name,movie_title,num_voted_users,cast_total_facebook_likes,actor_3_name,facenumber_in_poster,plot_keywords,movie_imdb_link,num_user_for_reviews,language,country,content_rating,budget,title_year,actor_2_facebook_likes,imdb_score,aspect_ratio,movie_facebook_likes", 417);
   int i;
   for(i = 0; i < numRows; i++){
     write(fd, "\n", 1);

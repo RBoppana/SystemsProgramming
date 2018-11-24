@@ -97,12 +97,6 @@ int main(int argc, char** argv){
         front = front->next;
         free(temp);
     }
-    
-    //Set COI for all rows
-    int COIIndex = findI(columnName);
-    for (i = 0; i < numRows; i++){
-        data[i]->COI = getListingField(data[i], COIIndex);
-    }
 
     //Determine datatype of COI
     int columnType = 0;
@@ -120,7 +114,7 @@ int main(int argc, char** argv){
         if (done == 1) break;
     }
     
-    //Create int array for sorting
+    //Create int array of indexes for sorting
     indexArray = (int*)malloc(numRows*sizeof(int));
     for (i = 0; i < numRows; i++){
         indexArray[i] = i;
@@ -147,7 +141,7 @@ int main(int argc, char** argv){
     }
     
     //Output data
-    printData(outputFD, headerRow, numRows);
+    printData(outputFD, numRows);
     
     //Freedom at last
     free(headerString);
@@ -277,10 +271,7 @@ void* fileThread(void* argument){
             return (void*) -1;
         }
         int i;
-        for (i = 0; i < 28; i++){
-            setListingField(temp, i, NULL);
-        }
-        if (populateListing(headerIndexes, k, line, temp) < 0){
+        if (populateListing(headerIndexes, k, findI(columnName), line, temp) < 0){
             fprintf(stderr, "Error parsing rows. (%s)\n", args->inputDirPath);
             free(temp);
             free(line);

@@ -36,6 +36,7 @@ typedef struct Listing{
 	char* aspect_ratio;
 	char* movie_facebook_likes;
     char* COI;
+    char* row;
 } Listing;
 
 typedef struct Node {
@@ -72,9 +73,7 @@ void appendList(Listing* input);
 
 Listing* insertNode(Listing* list, Listing* input);
 
-//int findHeader(char* headerString);
-
-int populateListing(int* indexArr, int indexArrL, char* line, Listing* listing);
+int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, Listing* listing);
 
 char* getListingField(Listing* listing, int index);
 
@@ -92,7 +91,7 @@ int merge(int* indexes, int first, int middle, int last);
 
 int mergeSort(int* indexes, int first, int last);
 
-void printData(int fd, char* headerRow, int numRows);
+void printData(int fd, int numRows);
 
 void freeLL(Node* front);
 
