@@ -54,7 +54,6 @@ int columnType;
 char* inputDirPath;
 char* outputDirPath;
 const char* reference[28]; 
-char* TIDs;
 pthread_mutex_t LLMutex;
 pthread_mutex_t stdoutMutex;
 

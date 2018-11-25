@@ -102,12 +102,12 @@ int main(int argc, char** argv){
         return -1;
     }
     
-    printf("test1\n");
-    fflush(stdout);
     //Create thread for top level input directory
     TID = 1;
     ThreadArgs* argument = (ThreadArgs*) malloc(sizeof(ThreadArgs));
-    argument->inputDirPath = inputDirPath;
+    char* temp = (char*) malloc(strlen(inputDirPath) + 1);
+    strcpy(temp, inputDirPath);
+    argument->inputDirPath = temp;
     pthread_t thread;
     int result = pthread_create(&thread, NULL, directoryThread, argument);
     if (result != 0){
@@ -194,7 +194,7 @@ void* directoryThread(void* argument){
     int totalThreads = 0;
     DIR* inputDir = opendir(args->inputDirPath);
     if (!inputDir){
-        fprintf(stderr, "Directory not found.\n");
+      fprintf(stderr, "Directory not found. (%s)\n", args->inputDirPath);
         free(args);
 	return (void*) returnValue;
     }
@@ -216,8 +216,8 @@ void* directoryThread(void* argument){
 
         //Set up arguments
         ThreadArgs* argument = (ThreadArgs*) malloc(sizeof(ThreadArgs));
-        char temp[strlen(args->inputDirPath) + 1 + strlen(de->d_name) + 1];
-        snprintf(temp, sizeof(temp), "%s/%s", args->inputDirPath, de->d_name);
+        char* temp = (char*) malloc(strlen(args->inputDirPath) + 1 + strlen(de->d_name) + 1);
+        snprintf(temp, strlen(args->inputDirPath) + strlen(de->d_name) + 2, "%s/%s", args->inputDirPath, de->d_name);
         argument->inputDirPath = temp;
 
         //Create thread
@@ -229,7 +229,8 @@ void* directoryThread(void* argument){
         }
         if (result != 0){
             fprintf(stderr, "Error creating thread\n");
-            free(args);
+            free(args->inputDirPath);
+	    free(args);
 	    return (void*) returnValue;
         }
 	i++;
@@ -240,6 +241,7 @@ void* directoryThread(void* argument){
         void* status;
         pthread_join(threads[i], &status);
         if ((int)(intptr_t) status < 0){
+	  free(args->inputDirPath);
 	  free(args);
 	  return (void*) returnValue;
 	}
@@ -248,15 +250,16 @@ void* directoryThread(void* argument){
 
     //Print metadata
     pthread_mutex_lock(&stdoutMutex);
-    fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: %d", getpid(), TID);
-    int tid;
-    for (tid = TID + 1; tid < TID + fileObjects; tid++){
-        fprintf(stdout, ", %d", tid);
-
+    fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
+    if (totalThreads > 0) fprintf(stdout, "%d", TID);
+    for (i = TID + 1; i < TID + totalThreads; i++){
+        fprintf(stdout, ", %d", i);
     }
-    fprintf(stdout, "\nTotal number of threads: %d\n", totalThreads);
+    TID += totalThreads;
+    fprintf(stdout, "\nTotal number of threads: %d\n\n", totalThreads);
     pthread_mutex_unlock(&stdoutMutex);
     
+    free(args->inputDirPath);
     free(args);
     *returnValue = totalThreads;
     return (void*) returnValue;
@@ -268,11 +271,15 @@ void* fileThread(void* argument){
 
   if (endsWith(args->inputDirPath, ".csv") != 1){
         fprintf(stderr, "Not a CSV file. (%s)\n", args->inputDirPath);
+	free(args->inputDirPath);
+	free(args);
+        return (void*) -1;
     }
 
     int inputFD = open(args->inputDirPath, O_RDONLY);
     if (inputFD < 0){
         fprintf(stderr, "Unable to open input file. (%s)\n", args->inputDirPath);
+	free(args->inputDirPath);
 	free(args);
         return (void*) -1;
     }
@@ -282,6 +289,7 @@ void* fileThread(void* argument){
     char* headerString = readLine(inputFD);
     if (!headerString){
         fprintf(stderr, "Header row missing. (%s)\n", args->inputDirPath);
+	free(args->inputDirPath);
         free(args);
 	return (void*) -1;
     }
@@ -293,13 +301,15 @@ void* fileThread(void* argument){
         if(x > -1){
             k++;
             if (k > 27){
-                fprintf(stderr, "Too many columns. (%s)\n", args->inputDirPath);
+	      fprintf(stderr, "Too many columns. (%s)\n", args->inputDirPath);
+	      free(args->inputDirPath);
                 free(args);
 		return (void*) -1;
             } 
             headerIndexes[k++] = x;
         } else {
             fprintf(stderr, "Improper column name. (%s)\n", args->inputDirPath);
+	    free(args->inputDirPath);
             free(args);
 	    return (void*) -1;
         }
@@ -317,6 +327,7 @@ void* fileThread(void* argument){
             free(line);
             free(headerString);
             freeLL(tempFront);
+	    free(args->inputDirPath);
 	    free(args);
             return (void*) -1;
         }
@@ -326,6 +337,7 @@ void* fileThread(void* argument){
             free(line);
             free(headerString);
             freeLL(tempFront);
+	    free(args->inputDirPath);
 	    free(args);
             return (void*) -1;
         }
@@ -347,6 +359,7 @@ void* fileThread(void* argument){
     numRows += rows;
     pthread_mutex_unlock(&LLMutex);
 
+    free(args->inputDirPath);
     free(args);
     return (void*) 0;
 }
