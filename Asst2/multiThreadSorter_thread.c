@@ -41,6 +41,7 @@ int main(int argc, char** argv){
     reference[24] = "actor_2_facebook_likes";
     reference[25] = "imdb_score";
     reference[26] = "aspect_ratio";
+    reference[27] = "movie_facebook_likes";
 
     //Handle flags
     int columnSet = 0, inputSet = 0, outputSet = 0;
