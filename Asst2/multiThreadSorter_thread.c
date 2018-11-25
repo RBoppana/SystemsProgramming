@@ -12,8 +12,8 @@
 #define USAGE "Usage: ./multiThreadSorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
 
 int main(int argc, char** argv){
-  //Initialize globals
-  numRows = 0;
+    //Initialize globals
+    numRows = 0;
     reference[0] = "color";
     reference[1] = "director_name";
     reference[2] = "num_critic_for_reviews";
@@ -41,6 +41,7 @@ int main(int argc, char** argv){
     reference[24] = "actor_2_facebook_likes";
     reference[25] = "imdb_score";
     reference[26] = "aspect_ratio";
+    reference[27] = "movie_facebook_likes";
 
     //Handle flags
     int columnSet = 0, inputSet = 0, outputSet = 0;
