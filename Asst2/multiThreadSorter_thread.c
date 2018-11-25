@@ -9,7 +9,7 @@
 #include <pthread.h>
 #include "multiThreadSorter_thread.h"
 
-#define USAGE "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
+#define USAGE "Usage: ./multiThreadSorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
 
 int main(int argc, char** argv){
   //Initialize globals
@@ -86,7 +86,7 @@ int main(int argc, char** argv){
     }
     if (inputSet != 1) inputDirPath = "."; 
     if (outputSet != 1) outputDirPath = "."; 
-    
+
     //Check column name exists
     if (findI(columnName) < 0){
         fprintf(stderr, "Column name invalid.\n");
@@ -100,7 +100,9 @@ int main(int argc, char** argv){
         fprintf(stderr, "Directory not found.\n");
         return -1;
     }
-
+    
+    printf("test1\n");
+    fflush(stdout);
     //Create thread for top level input directory
     TID = 1;
     ThreadArgs* argument = (ThreadArgs*) malloc(sizeof(ThreadArgs));
@@ -204,12 +206,11 @@ void* directoryThread(void* argument){
     }
     rewinddir(inputDir);
 
-    pthread_t threads[fileObjects]; 
-    int i;
-    for (i = 0; i < fileObjects; i++){
-        de = readdir(inputDir);
-        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0){
-            continue;
+    pthread_t threads[fileObjects - 2]; //No thread for . and ..
+    int i = 0;
+    while((de = readdir(inputDir))){
+        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0){  
+	  continue;
         }
 
         //Set up arguments
@@ -230,10 +231,11 @@ void* directoryThread(void* argument){
             free(args);
 	    return (void*) returnValue;
         }
+	i++;
     }
 
     //Wait for all threads to finish
-    for (i = 0; i < fileObjects; i++){
+    for (i = 0; i < fileObjects - 2; i++){
         void* status;
         pthread_join(threads[i], &status);
         if ((int)(intptr_t) status < 0){
