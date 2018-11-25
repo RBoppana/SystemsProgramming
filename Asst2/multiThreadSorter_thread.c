@@ -9,11 +9,11 @@
 #include <pthread.h>
 #include "multiThreadSorter_thread.h"
 
-#define USAGE "Usage: ./scannerCSVsorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
+#define USAGE "Usage: ./multiThreadSorter -c <column-name> [-d <input-directory>]\n                          [-o <output-directory>]\n"
 
 int main(int argc, char** argv){
-  //Initialize globals
-  numRows = 0;
+    //Initialize globals
+    numRows = 0;
     reference[0] = "color";
     reference[1] = "director_name";
     reference[2] = "num_critic_for_reviews";
