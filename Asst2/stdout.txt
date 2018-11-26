@@ -1,0 +1,20 @@
+Path: test/stuff.txt
+Initial PID: 139314
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/empty/empty2
+Initial PID: 139314
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/empty
+Initial PID: 139314
+TIDS of all spawned threads: 1
+Total number of threads: 1
+
+Path: test
+Initial PID: 139314
+TIDS of all spawned threads: 2, 3
+Total number of threads: 3
+

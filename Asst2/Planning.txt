@@ -1,7 +1,0 @@
-- Read Flags
-- Set input and output directories
-- Setup STDOUT printing
-- Recursively traverse directories
-	- spawn new thread on new file/new directory (pass in DIR*, thread will process element and decide if file etc)
-	- if csv, open file
-	

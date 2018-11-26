@@ -118,7 +118,8 @@ int main(int argc, char** argv){
     //Wait for all input reading to finish
     void* status;
     pthread_join(thread, &status);
-    if ((int)(intptr_t) status < 0) return -1;
+    if (*(int*)status < 0) return -1;
+    free(status);
 
     //Moving link list to array of listings
     data = (Listing**) malloc(numRows * sizeof(Listing*));
@@ -238,25 +239,24 @@ void* directoryThread(void* argument){
 
     //Wait for all threads to finish
     for (i = 0; i < fileObjects - 2; i++){
-        void* status;
-        pthread_join(threads[i], &status);
-        if ((int)(intptr_t) status < 0){
-	  free(args->inputDirPath);
-	  free(args);
-	  return (void*) returnValue;
-	}
-        else totalThreads += *(int*)(intptr_t)status + 1;
+      void* status;
+      pthread_join(threads[i], &status);
+      if (*(int*)status < 0) totalThreads++; 
+      else totalThreads += *(int*)status + 1;
+      free(status);
     }
 
     //Print metadata
     pthread_mutex_lock(&stdoutMutex);
+    fprintf(stdout, "Path: %s\n", args->inputDirPath);
     fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
     if (totalThreads > 0) fprintf(stdout, "%d", TID);
-    for (i = TID + 1; i < TID + totalThreads; i++){
+    for (i = TID + 1; i < TID + fileObjects - 2; i++){
         fprintf(stdout, ", %d", i);
     }
-    TID += totalThreads;
+    TID += fileObjects - 2;
     fprintf(stdout, "\nTotal number of threads: %d\n\n", totalThreads);
+    fflush(stdout);
     pthread_mutex_unlock(&stdoutMutex);
     
     free(args->inputDirPath);
@@ -268,12 +268,21 @@ void* directoryThread(void* argument){
 //Function for threads that process files
 void* fileThread(void* argument){
   ThreadArgs* args = argument;  
+  int* returnValue = (int*) malloc(sizeof(int));
+  *returnValue = -1;
+
+  //Print metadata
+  pthread_mutex_lock(&stdoutMutex);
+  fprintf(stdout, "Path: %s\n", args->inputDirPath);
+  fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: \nTotal number of threads: 0\n\n", getpid());
+  fflush(stdout);
+  pthread_mutex_unlock(&stdoutMutex);
 
   if (endsWith(args->inputDirPath, ".csv") != 1){
         fprintf(stderr, "Not a CSV file. (%s)\n", args->inputDirPath);
 	free(args->inputDirPath);
 	free(args);
-        return (void*) -1;
+        return (void*) returnValue;
     }
 
     int inputFD = open(args->inputDirPath, O_RDONLY);
@@ -281,7 +290,7 @@ void* fileThread(void* argument){
         fprintf(stderr, "Unable to open input file. (%s)\n", args->inputDirPath);
 	free(args->inputDirPath);
 	free(args);
-        return (void*) -1;
+        return (void*) returnValue;
     }
 
     //Header line processing
@@ -291,7 +300,7 @@ void* fileThread(void* argument){
         fprintf(stderr, "Header row missing. (%s)\n", args->inputDirPath);
 	free(args->inputDirPath);
         free(args);
-	return (void*) -1;
+	return (void*) returnValue;
     }
     int k = 0;
     char* savePtr;
@@ -304,14 +313,14 @@ void* fileThread(void* argument){
 	      fprintf(stderr, "Too many columns. (%s)\n", args->inputDirPath);
 	      free(args->inputDirPath);
                 free(args);
-		return (void*) -1;
+		return (void*) returnValue;
             } 
             headerIndexes[k++] = x;
         } else {
             fprintf(stderr, "Improper column name. (%s)\n", args->inputDirPath);
 	    free(args->inputDirPath);
             free(args);
-	    return (void*) -1;
+	    return (void*) returnValue;
         }
         token = strtok_r(NULL, ",", &savePtr);
     }
@@ -329,7 +338,7 @@ void* fileThread(void* argument){
             freeLL(tempFront);
 	    free(args->inputDirPath);
 	    free(args);
-            return (void*) -1;
+            return (void*) returnValue;
         }
         if (populateListing(headerIndexes, k, findI(columnName), line, temp) < 0){
             fprintf(stderr, "Error parsing rows. (%s)\n", args->inputDirPath);
@@ -339,7 +348,7 @@ void* fileThread(void* argument){
             freeLL(tempFront);
 	    free(args->inputDirPath);
 	    free(args);
-            return (void*) -1;
+            return (void*) returnValue;
         }
         tempFront = insertNode(tempFront, temp);
         rows++;
@@ -361,5 +370,6 @@ void* fileThread(void* argument){
 
     free(args->inputDirPath);
     free(args);
-    return (void*) 0;
+    *returnValue = 0;
+    return (void*) returnValue;
 }
