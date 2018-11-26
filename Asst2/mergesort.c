@@ -182,8 +182,8 @@ int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, L
         setListingField(listing, indexArr[currentIndex], new);
         rowLength += strlen(col);
         col[0] = '\0';
-        currentIndex++;
       }
+      currentIndex++;
     }
   }
   if (currentIndex != indexArrL){ //Check number of columns match
@@ -199,10 +199,11 @@ int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, L
   int i;
   for (i = 1; i < 28; i++){
     strcat(temp, ",");
-    strcat(temp, getListingField(listing, i));
+    if (getListingField(listing, i) != NULL){
+      strcat(temp, getListingField(listing, i));
+    }
   }
   listing->row = temp;
-  free(temp);
 
   //Set column of interest
   char* trimmed = removeWhitespace(getListingField(listing, targetIndex)); //Remove whitespace and quotes

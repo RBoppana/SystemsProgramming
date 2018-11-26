@@ -13,6 +13,7 @@
 
 int main(int argc, char** argv){
     //Initialize globals
+  front = NULL;
     numRows = 0;
     reference[0] = "color";
     reference[1] = "director_name";
@@ -308,14 +309,14 @@ void* fileThread(void* argument){
     while (token != NULL){
         int x = findI(token);
         if(x > -1){
-            k++;
             if (k > 27){
 	      fprintf(stderr, "Too many columns. (%s)\n", args->inputDirPath);
 	      free(args->inputDirPath);
                 free(args);
 		return (void*) returnValue;
             } 
-            headerIndexes[k++] = x;
+            headerIndexes[k] = x;
+	    k++;
         } else {
             fprintf(stderr, "Improper column name. (%s)\n", args->inputDirPath);
 	    free(args->inputDirPath);
@@ -326,7 +327,7 @@ void* fileThread(void* argument){
     }
 
     //Create temporary linked list of rows
-    Node* tempFront;
+    Node* tempFront = NULL;
     char* line;
     int rows;
     while((line = readLine(inputFD))){
