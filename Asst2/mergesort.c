@@ -85,9 +85,9 @@ char* getListingField(Listing* listing, int index){
     case 25:
       return listing->imdb_score;
     case 26:
-      return listing->aspect_ratio;    
+      return listing->aspect_ratio;
     case 27:
-      return listing->movie_facebook_likes;    
+      return listing->movie_facebook_likes;
     default:
       return NULL; //random bs case
   }
@@ -158,7 +158,7 @@ void setListingField(Listing* listing, int index, char* str){
 
 int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, Listing* listing){
   int rowLength = 0;
-  
+
   //Get string value of column of interest
   char col[strlen(line) + 1];
   col[0] = '\0';
@@ -195,7 +195,8 @@ int populateListing(int* indexArr, int indexArrL, int targetIndex, char* line, L
   if (!temp) {
     return -1;
   }
-  strcat(temp, getListingField(listing, 0));
+  if(getListingField(listing, 0) != NULL)
+    strcat(temp, getListingField(listing, 0));
   int i;
   for (i = 1; i < 28; i++){
     strcat(temp, ",");
@@ -230,7 +231,7 @@ char* readLine(int fd){
   if (length == 0 && current != '\n'){
     free(string);
     return NULL;
-  } 
+  }
   string[length] = '\0';
   length++;
   return (char*) realloc(string, length * sizeof(char));
@@ -249,12 +250,13 @@ int numChars(char* string, char character){
 
 //Removes whitespace and quotes around a string
 char* removeWhitespace(char* string){
+  if(!string) return NULL;
   int start, end;
   int i;
   for (i = 0; i < strlen(string); i++){ //Preceding whitespace
     if (isspace(string[i]) || string[i] == '"') continue;
     start = i;
-    break; 
+    break;
   }
   for (i = strlen(string) - 1; i >= 0; i--){ //Proceding whitespace
     if (isspace(string[i]) || string[i] == '"') continue;
@@ -299,7 +301,7 @@ int merge(int* indexes, int first, int middle, int last){
       j++;
     }
   }
-  
+
   for (k = 0; k <= (last - first); k++){ //Copy temp back into array
     indexes[k + first] = temp[k];
   }

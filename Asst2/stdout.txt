@@ -1,20 +1,70 @@
+Path: test/no.txt
+Initial PID: 110664
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/1.csv
+Initial PID: 110664
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/small.csv
+Initial PID: 110664
+TIDS of all spawned threads: 
+Total number of threads: 0
+
 Path: test/stuff.txt
-Initial PID: 139314
+Initial PID: 110664
 TIDS of all spawned threads: 
 Total number of threads: 0
 
-Path: test/empty/empty2
-Initial PID: 139314
+Path: test/B/anana.txt
+Initial PID: 110664
 TIDS of all spawned threads: 
 Total number of threads: 0
 
-Path: test/empty
-Initial PID: 139314
+Path: test/B/Pineapple/Ludicolo.txt
+Initial PID: 110664
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/B/Pineapple
+Initial PID: 110664
 TIDS of all spawned threads: 1
 Total number of threads: 1
 
-Path: test
-Initial PID: 139314
+Path: test/B
+Initial PID: 110664
 TIDS of all spawned threads: 2, 3
 Total number of threads: 3
+
+Path: test/A/blah.txt
+Initial PID: 110664
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/A/Vegetables/broccoli.txt
+Initial PID: 110664
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/A/Vegetables/carrot.txt
+Initial PID: 110664
+TIDS of all spawned threads: 
+Total number of threads: 0
+
+Path: test/A/Vegetables
+Initial PID: 110664
+TIDS of all spawned threads: 4, 5
+Total number of threads: 2
+
+Path: test/A
+Initial PID: 110664
+TIDS of all spawned threads: 6, 7
+Total number of threads: 4
+
+Path: test
+Initial PID: 110664
+TIDS of all spawned threads: 8, 9, 10, 11, 12, 13
+Total number of threads: 13
 
