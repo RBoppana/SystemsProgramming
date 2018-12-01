@@ -1,8 +1,10 @@
-bankingServer:
+all: server client
+
+server:
 	gcc -g -Wall -Werror -fsanitize=address -lpthread -o bankingServer bankingServer.c
 
-bankingClient:
+client:
 	gcc -g -Wall -Werror -fsanitize=address -lpthread -o bankingClient bankingClient.c
 
 clean: 
-	rm -rf scannerCSVsorter
+	rm -rf bankingServer bankingClient
