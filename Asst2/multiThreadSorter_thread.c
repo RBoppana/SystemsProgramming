@@ -249,7 +249,6 @@ void* directoryThread(void* argument){
 
     //Print metadata
     pthread_mutex_lock(&stdoutMutex);
-    fprintf(stdout, "Path: %s\n", args->inputDirPath);
     fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: ", getpid());
     if (totalThreads > 0) fprintf(stdout, "%d", TID);
     for (i = TID + 1; i < TID + fileObjects - 2; i++){
@@ -274,7 +273,6 @@ void* fileThread(void* argument){
 
   //Print metadata
   pthread_mutex_lock(&stdoutMutex);
-  fprintf(stdout, "Path: %s\n", args->inputDirPath);
   fprintf(stdout, "Initial PID: %d\nTIDS of all spawned threads: \nTotal number of threads: 0\n\n", getpid());
   fflush(stdout);
   pthread_mutex_unlock(&stdoutMutex);
