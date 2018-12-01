@@ -9,6 +9,27 @@
 #include <sys/wait.h>
 #include "bankingServer.h"
 
+typedef struct Account{
+	char* accName;
+	float balance;
+	int inSessionFlag;
+} Account;
+
+typedef struct Node{
+	Account* accn;
+	struct Node* next;
+} Node;
+
+Node* Bank;
+
+int createAccount(char* name){
+
+}
+
+int printBankAccns(){
+
+}
+
 int main(int argc, char** argv){
 
 	return 0;

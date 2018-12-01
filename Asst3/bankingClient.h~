@@ -1,0 +1,16 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+typedef struct Account{
+	char* accName;
+	float balance;
+	int inSessionFlag;
+} Account;
+
+typedef struct Node{
+	Account* accn;
+	Node* next; 
+} Node;
+
+Node* Bank;
