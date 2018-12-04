@@ -54,7 +54,7 @@ int userPrompt(server port stuff){
     }else if(strcmp(command, "quit") == 0){
       send quit to server and do all quit stuff
     }else{
-      printf("Please enter a valid command.");
+      printf("Please enter a valid command. Keep in mind that no account is in service.");
     }
   }
 }
