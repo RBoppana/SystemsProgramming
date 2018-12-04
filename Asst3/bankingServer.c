@@ -23,6 +23,8 @@ typedef struct Node{
 } Node;
 
 Node* Bank;
+Node* currentAccount;
+int serviceID;
 
 int createAccount(char* name){
 	Node* ptr = Bank;
@@ -48,28 +50,34 @@ int createAccount(char* name){
 	return 1; //success
 }
 
-int serve(char* name, int option, float amount){
+int serve(char* name, int option, float amount, int inputServiceID){
 	Node* ptr = Bank;
 	while(ptr){
 		if(strcmp(ptr->accn->accName, name) == 0){
-			Account* currentAccn = ptr->accn;
-			if(currentAccn->inSessionFlag == 1){
-				return -2; //account in service
+			currentAccount = ptr->accn;
+			if(currentAccount->inSessionFlag == 0){
+				//mutex
+				currentAccount->inSessionFlag = inputServiceID; //account wasn't being serviced
+				//unlock
 			}
-			currentAccn->inSessionFlag = 1;
+			if(currentAccount->inSessionFlag != inputServiceID){
+				return -2; //account in service by another account
+			}
 			switch(option){
 				case 1: //deposit
-					currentAccn->balance += amount;
+					currentAccount->balance += amount;
 					return 1;
 				case 2: //withdraw
-					if((currentAccn->balance - amount) < 0) return -3; //negative balance
-					currentAccn->balance -= amount;
+					if((currentAccount->balance - amount) < 0) return -3; //negative balance
+					currentAccount->balance -= amount;
 					return 1;
 				case 3: //query
-					return currentAccn->balance;
+					return currentAccount->balance;
 				case 4: //end session
-					currentAccn->inSessionFlag = 0;
+					currentAccount->inSessionFlag = 0;
 					return 1; //successfully ended
+				default:
+					return 0; //idk
 			}
 			break;
 		}
@@ -78,12 +86,12 @@ int serve(char* name, int option, float amount){
 }
 
 int printBankAccnsList(){
-	//mutex bank data
+	//mutex bank list
 	Node* ptr = Bank;
 	while(ptr){
 		printf("%s\t%f\t", ptr->accn->accName, ptr->accn->balance);
-		if(ptr->accn->inSessionFlag == 1) printf("IN SERVICE");
-		prinf("\n");
+		if(ptr->accn->inSessionFlag > 0) printf("IN SERVICE");
+		printf("\n");
 		ptr = ptr->next;
 	}
 	free(ptr);
@@ -91,6 +99,9 @@ int printBankAccnsList(){
 }
 
 int main(int argc, char** argv){
+
+	serviceID = 1;
+	//everytime any client asks for a serviceID, send mutexed serviceID++ to give a new unique value
 
 	return 0;
 }
