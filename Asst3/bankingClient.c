@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <pthread.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -11,7 +12,9 @@
 
 pthread_t inputThread, outputThread;
 
-/*void* userPrompt(void* arg){
+void* userPrompt(void* arg){
+  return NULL;
+}/*{
   while(connected and every 2 seconds){
     printf("What can we help you with?\n");
     char command[10];
@@ -58,11 +61,11 @@ pthread_t inputThread, outputThread;
       printf("Please enter a valid command. Keep in mind that no account is in service.");
     }
   }
-}
+  }*/
 
 void* serverResponse(void* arg){
-
-}*/
+  return NULL;
+}
 
 int serviceAcceptance; //marked by server response when serve is called
 
@@ -95,9 +98,10 @@ int main(int argc, char** argv){
   server.sin_port = htons(port);
 
   //Connect to server
-  while (serverfd < 0){
+  while (1){
     fprintf(stdout, "Connecting to %s on port %d...\n", argv[1], port);
-    if (connect(socketfd, &server, sizeof(server)) < 0){
+    fflush(stdout);
+    if (connect(socketfd, (struct sockaddr*) &server, sizeof(server)) < 0){
       fprintf(stdout, "Unable to connect to server. Retrying in 3 seconds.\n");
       sleep(3);
       continue;
@@ -108,11 +112,11 @@ int main(int argc, char** argv){
   }
 
   if (pthread_create(&inputThread, NULL, userPrompt, NULL) != 0){
-      fprintf(stderr, "Error creating input thread\n");
+      fprintf(stderr, "Error creating input thread.\n");
       return -1;
   }
   if (pthread_create(&outputThread, NULL, serverResponse, NULL) != 0){
-      fprintf(stderr, "Error creating output thread\n");
+      fprintf(stderr, "Error creating output thread.\n");
       pthread_cancel(inputThread);
       pthread_join(inputThread, NULL);
       return -1;
@@ -120,7 +124,7 @@ int main(int argc, char** argv){
 
   pthread_join(inputThread, NULL);
   pthread_join(outputThread, NULL);
-  fprintf(stdout, "Client session complete.");
+  fprintf(stdout, "Client session complete.\n");
 
   return 0;
 }
