@@ -85,6 +85,10 @@ int serve(char* name, int option, float amount, int inputServiceID){
 	return -1; //account doesnt exist
 }
 
+int quit(){
+
+}
+
 int printBankAccnsList(){
 	//mutex bank list
 	Node* ptr = Bank;
@@ -98,10 +102,22 @@ int printBankAccnsList(){
 	//unlock mutex
 }
 
+int clientCommandWrapper(){
+
+}
+
 int main(int argc, char** argv){
 
 	serviceID = 1;
 	//everytime any client asks for a serviceID, send mutexed serviceID++ to give a new unique value
+
+	//when client connects, launch a thread with clientCommandWrapper: takes in an option and runs either create or serve or quit as shown above, and passes in same arguements
+
+	//need session acceptor thread and method
+
+	//need to figure out 15 sec printing w/ sigint, server shutdown w/ ctrl c
+
+	//need to put in mutexes for above methods when relevant
 
 	return 0;
 }
