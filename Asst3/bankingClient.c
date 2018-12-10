@@ -9,8 +9,9 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 
-/*
-int userPrompt(server port stuff){
+pthread_t inputThread, outputThread;
+
+/*void* userPrompt(void* arg){
   while(connected and every 2 seconds){
     printf("What can we help you with?\n");
     char command[10];
@@ -58,13 +59,10 @@ int userPrompt(server port stuff){
     }
   }
 }
-*/
 
-/*
-int serverResponses(){
+void* serverResponse(void* arg){
 
-}
-*/
+}*/
 
 int serviceAcceptance; //marked by server response when serve is called
 
@@ -74,13 +72,12 @@ int main(int argc, char** argv){
     return -1;
   }
 
+  //Socket setup
   int port = atoi(argv[2]);
   if (port == 0){
     fprintf(stderr, "Invalid port number.\n");
     return -1;
   }
-
-  //Socket setup
   int socketfd = socket(AF_INET, SOCK_STREAM, 0);
   struct sockaddr_in server;
   struct hostent *he;
@@ -100,13 +97,30 @@ int main(int argc, char** argv){
   //Connect to server
   while (serverfd < 0){
     fprintf(stdout, "Connecting to %s on port %d...\n", argv[1], port);
+    if (connect(socketfd, &server, sizeof(server)) < 0){
+      fprintf(stdout, "Unable to connect to server. Retrying in 3 seconds.\n");
+      sleep(3);
+      continue;
+    } else {
+      fprintf(stdout, "Successfully connected.\n");
+      break;
+    }
   }
 
-  //Connection Confirmation Message
+  if (pthread_create(&inputThread, NULL, userPrompt, NULL) != 0){
+      fprintf(stderr, "Error creating input thread\n");
+      return -1;
+  }
+  if (pthread_create(&outputThread, NULL, serverResponse, NULL) != 0){
+      fprintf(stderr, "Error creating output thread\n");
+      pthread_cancel(inputThread);
+      pthread_join(inputThread, NULL);
+      return -1;
+  }
 
-  //Launch User Prompt Thread  
-
-  //Launch Server Response Thread
+  pthread_join(inputThread, NULL);
+  pthread_join(outputThread, NULL);
+  fprintf(stdout, "Client session complete.");
 
   return 0;
 }
