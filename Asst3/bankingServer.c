@@ -31,7 +31,7 @@ int serviceID;
 int seconds = 0;
 int keepRunning = 1;
 
-/*
+
 int createAccount(char* name){
 	//mutex
 	Node* ptr = Bank;
@@ -56,62 +56,6 @@ int createAccount(char* name){
 	Bank = newNode;
 	//unlock mutex
 	return 1; //success
-}
-
-int serve(char* name, int option, float amount, int inputServiceID){
-	//mutex
-	Node* ptr = Bank;
-	while(ptr){
-		if(strcmp(ptr->accn->accName, name) == 0){
-			currentAccount = ptr->accn;
-			if(currentAccount->inSessionFlag == 0){
-				currentAccount->inSessionFlag = inputServiceID; //account wasn't being serviced
-			}
-			if(currentAccount->inSessionFlag != inputServiceID){
-				return -2; //account in service by another account
-			}
-			switch(option){
-				case 1: //deposit
-					currentAccount->balance += amount;
-					return 1;
-				case 2: //withdraw
-					if((currentAccount->balance - amount) < 0) return -3; //negative balance
-					currentAccount->balance -= amount;
-					return 1;
-				case 3: //query
-					return currentAccount->balance;
-				case 4: //end session
-					currentAccount->inSessionFlag = 0;
-					return 1; //successfully ended
-				default:
-					return 0; //idk
-			}
-			break;
-		}
-	}
-	//unlock mutex
-	return -1; //account doesnt exist
-  Node* ptr = Bank;
-  while(ptr){
-    if(strcmp(name, ptr->accn->accName) == 0) return -2; //duplicate account
-    ptr = ptr->next;
-  }
-  free(ptr);
-
-  Account* newAccount = (Account*)malloc(sizeof(Account));
-  if(!newAccount) return -1; //out of memory - couldnt create
-  newAccount->accName = name;
-  newAccount->balance = 0.0;
-  newAccount->inSessionFlag = 0;
-
-  Node* newNode = (Node*)malloc(sizeof(Node));
-  if(!newNode){
-    free(newAccount);
-    return -1; //out of memory - couldnt create
-  }
-  newNode->next = Bank;
-  Bank = newNode;
-  return 1; //success
 }
 
 int serve(char* name, int option, float amount, int inputServiceID){
@@ -161,10 +105,14 @@ int printBankAccnsList(){
   free(ptr);
   //unlock mutex
 }
-*/
+
 void* clientCommandWrapper(void* arg){
   pthread_detach(pthread_self());
-  fprintf(stdout, "Connected.");
+  int socketfd = *arg;
+
+  char command[265];
+  read(socketfd, command, 264);
+  fprintf(command);
   fflush(stdout);
   return NULL;
 }
@@ -236,8 +184,10 @@ int main(int argc, char** argv){
     pthread_t thread;
     if (pthread_create(&thread, NULL, clientCommandWrapper, &newfd) != 0){
       fprintf(stderr, "Error creating client thread.\n");
+      newfd.close();
       continue;
     }
+    fprintf(stderr, "Accepted connection from %s.\n", client.sin_addr.s_addr);
   }
 
   //disconnect and close all threads etc

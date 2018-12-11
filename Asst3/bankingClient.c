@@ -13,21 +13,24 @@
 pthread_t inputThread, outputThread;
 
 void* userPrompt(void* arg){
-  return NULL;
-}
-/*while(connected){
-    printf("What can we help you with?\n");
+  pthread_detach(pthread_self());
+  int socketfd = *arg;
+
+  while(1){
+    printf("Please enter a command: ");
     char command[10];
     scanf("%s", command);
     if(strcmp(command, "create") == 0){
-      char name[256];
+      char name[257];
       scanf("%s", name);
-      send create to server
+      char string[7 + strlen(name) + 1];
+      snprintf(string, sizeof(string), "create\n%s", name);
+      write(socketfd, string, strlen(string));
     }else if(strcmp(command, "serve") == 0){
-      int serviceID = get unique serviceID from server -- server always sends new incremented value
-      char name[256];
+      int serviceID = //get unique serviceID from server -- server always sends new incremented value
+      char name[257];
       scanf("%s", name);
-      send data to server -- serve(name, -1, -1, serviceID) 
+      //send data to server -- serve(name, -1, -1, serviceID) 
       if(serviceAcceptance == -2){
         printf("Account already in service!\n");
       }else if(serviceAcceptance == -1){
@@ -38,31 +41,31 @@ void* userPrompt(void* arg){
           if(strcmp(command, "deposit") == 0){
             float amount;
             scanf("%f", amount);
-            send data to server -- serve(name, 1, amount, serviceID) 
+            //send data to server -- serve(name, 1, amount, serviceID) 
           }else if(strcmp(command, "withdraw") == 0){
             float amount;
             scanf("%f", amount);
-            send data to server -- serve(name, 2, amount, serviceID) 
+            //send data to server -- serve(name, 2, amount, serviceID) 
           }else if(strcmp(command, "query") == 0){
-            send query to server -- serve(name, 3, -1, serviceID)
+            //send query to server -- serve(name, 3, -1, serviceID)
           }else if(strcmp(command, "quit") == 0){
-            send quit to server and do all quit stuff
+            //send quit to server and do all quit stuff
           }else if(strcmp(command, "create") == 0){
             printf("Please exist the service session to create an account.\n");
           }else{
             printf("Please enter a valid command, you are currently in service of account: %s.\n", name);
           }
         }
-        send end to server -- serve(name, 4, -1, serviceID)
+        //send end to server -- serve(name, 4, -1, serviceID)
       }      
     }else if(strcmp(command, "quit") == 0){
-      send quit to server and do all quit stuff
+      //send quit to server and do all quit stuff
     }else{
       printf("Please enter a valid command. Keep in mind that no account is in service.");
     }
     sleep(2);
   }
-*/
+}
 
 void* serverResponse(void* arg){
   return NULL;
@@ -112,20 +115,16 @@ int main(int argc, char** argv){
     }
   }
 
-  if (pthread_create(&inputThread, NULL, userPrompt, NULL) != 0){
+  if (pthread_create(&inputThread, NULL, userPrompt, &socketfd) != 0){
       fprintf(stderr, "Error creating input thread.\n");
       return -1;
   }
-  if (pthread_create(&outputThread, NULL, serverResponse, NULL) != 0){
+  if (pthread_create(&outputThread, NULL, serverResponse, &socketfd) != 0){
       fprintf(stderr, "Error creating output thread.\n");
       pthread_cancel(inputThread);
       pthread_join(inputThread, NULL);
       return -1;
   }
 
-  pthread_join(inputThread, NULL);
-  pthread_join(outputThread, NULL);
-  fprintf(stdout, "Client session complete.\n");
-
-  return 0;
+  pthread_exit();
 }
