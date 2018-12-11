@@ -27,6 +27,7 @@ Node* Bank;
 Node* currentAccount;
 int serviceID;
 
+/*
 int createAccount(char* name){
   Node* ptr = Bank;
   while(ptr){
@@ -102,9 +103,12 @@ int printBankAccnsList(){
   free(ptr);
   //unlock mutex
 }
-
+*/
 void* clientCommandWrapper(void* arg){
+  pthread_detach(pthread_self());
   fprintf(stdout, "Connected.");
+  fflush(stdout);
+  return NULL;
 }
 
 int main(int argc, char** argv){
@@ -126,7 +130,7 @@ int main(int argc, char** argv){
     return -1;
   }
   server.sin_family = AF_INET;
-  server.sin_port = htons(portno);
+  server.sin_port = htons(port);
   server.sin_addr.s_addr = INADDR_ANY;
   if (bind(socketfd, (struct sockaddr*) &server, sizeof(server)) < 0){
     fprintf(stderr, "Error binding socket.\n");
@@ -135,17 +139,13 @@ int main(int argc, char** argv){
 
   //Handle new client connections
   while (1){
-    int clientLen = sizeof(client);
+    socklen_t clientLen = sizeof(client);
     int newfd = accept(socketfd, (struct sockaddr*) &client, &clientLen);
     if (newfd < 0){
       fprintf(stderr, "Error accepting client connection.\n");
       continue;
     }
     pthread_t thread;
-    if (pthread_detach(thread) != 0){
-      fprintf(stderr, "Error detaching.\n");
-      continue;
-    }
     if (pthread_create(&thread, NULL, clientCommandWrapper, &newfd) != 0){
       fprintf(stderr, "Error creating client thread.\n");
       continue;
