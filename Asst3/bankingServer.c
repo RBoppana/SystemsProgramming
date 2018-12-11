@@ -29,6 +29,7 @@ Node* Bank;
 Node* currentAccount;
 int serviceID;
 int seconds = 0;
+int keepRunning = 1;
 
 /*
 int createAccount(char* name){
@@ -181,9 +182,7 @@ void timer(int i){
 }
 
 void quit(int i){
-  signal(SIGINT, quit);
-	//close all threads etc
-  exit(0);
+	keepRunning = 0;
 }
 
 int main(int argc, char** argv){
@@ -227,7 +226,7 @@ int main(int argc, char** argv){
   signal(SIGINT, quit);
 
   //Handle new client connections
-  while (1){
+  while (keepRunning){
     socklen_t clientLen = sizeof(client);
     int newfd = accept(socketfd, (struct sockaddr*) &client, &clientLen);
     if (newfd < 0){
@@ -240,6 +239,8 @@ int main(int argc, char** argv){
       continue;
     }
   }
+
+  //disconnect and close all threads etc
 
   return 0;
 }

@@ -14,8 +14,8 @@ pthread_t inputThread, outputThread;
 
 void* userPrompt(void* arg){
   return NULL;
-}/*{
-  while(connected and every 2 seconds){
+}
+/*while(connected){
     printf("What can we help you with?\n");
     char command[10];
     scanf("%s", command);
@@ -60,9 +60,9 @@ void* userPrompt(void* arg){
     }else{
       printf("Please enter a valid command. Keep in mind that no account is in service.");
     }
-    //sleep 2 sec
+    sleep(2);
   }
-  }*/
+*/
 
 void* serverResponse(void* arg){
   return NULL;
