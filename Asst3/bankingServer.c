@@ -7,6 +7,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
@@ -26,9 +28,68 @@ typedef struct Node{
 Node* Bank;
 Node* currentAccount;
 int serviceID;
+int seconds = 0;
 
 /*
 int createAccount(char* name){
+	//mutex
+	Node* ptr = Bank;
+	while(ptr){
+		if(strcmp(name, ptr->accn->accName) == 0) return -2; //duplicate account
+		ptr = ptr->next;
+	}
+	free(ptr);
+
+	Account* newAccount = (Account*)malloc(sizeof(Account));
+	if(!newAccount) return -1; //out of memory - couldnt create
+	newAccount->accName = name;
+	newAccount->balance = 0.0;
+	newAccount->inSessionFlag = 0;
+
+	Node* newNode = (Node*)malloc(sizeof(Node));
+	if(!newNode){
+		free(newAccount);
+		return -1; //out of memory - couldnt create
+	}
+	newNode->next = Bank;
+	Bank = newNode;
+	//unlock mutex
+	return 1; //success
+}
+
+int serve(char* name, int option, float amount, int inputServiceID){
+	//mutex
+	Node* ptr = Bank;
+	while(ptr){
+		if(strcmp(ptr->accn->accName, name) == 0){
+			currentAccount = ptr->accn;
+			if(currentAccount->inSessionFlag == 0){
+				currentAccount->inSessionFlag = inputServiceID; //account wasn't being serviced
+			}
+			if(currentAccount->inSessionFlag != inputServiceID){
+				return -2; //account in service by another account
+			}
+			switch(option){
+				case 1: //deposit
+					currentAccount->balance += amount;
+					return 1;
+				case 2: //withdraw
+					if((currentAccount->balance - amount) < 0) return -3; //negative balance
+					currentAccount->balance -= amount;
+					return 1;
+				case 3: //query
+					return currentAccount->balance;
+				case 4: //end session
+					currentAccount->inSessionFlag = 0;
+					return 1; //successfully ended
+				default:
+					return 0; //idk
+			}
+			break;
+		}
+	}
+	//unlock mutex
+	return -1; //account doesnt exist
   Node* ptr = Bank;
   while(ptr){
     if(strcmp(name, ptr->accn->accName) == 0) return -2; //duplicate account
@@ -87,10 +148,6 @@ int serve(char* name, int option, float amount, int inputServiceID){
   return -1; //account doesnt exist
 }
 
-int quit(){
-
-}
-
 int printBankAccnsList(){
   //mutex bank list
   Node* ptr = Bank;
@@ -111,11 +168,31 @@ void* clientCommandWrapper(void* arg){
   return NULL;
 }
 
+void timer(int i){
+  struct itimerval store;
+  signal(SIGALRM, timer);
+  seconds += 15;
+  printBankAccnsList();
+  store.it_interval.tv_sec = 0;
+  store.it_interval.tv_usec = 0;
+  store.it_value.tv_sec = 15; 
+  store.it_value.tv_usec = 0;
+  setitimer(ITIMER_REAL, &store,0);
+}
+
+void quit(int i){
+  signal(SIGINT, quit);
+	//close all threads etc
+  exit(0);
+}
+
 int main(int argc, char** argv){
   if (argc != 2){
     fprintf(stderr, "Please specify the port of the server.\n");
     return -1;
   }
+
+  serviceID = 1;
 
   //Socket setup
   int port = atoi(argv[1]);
@@ -137,6 +214,18 @@ int main(int argc, char** argv){
   }
   listen(socketfd, 5);
 
+  //Setup 15 second loop and ctrl c interrupt
+
+	struct itimerval store;
+  store.it_interval.tv_sec = 0;
+  store.it_interval.tv_usec = 0;
+  store.it_value.tv_sec = 15; 
+  store.it_value.tv_usec = 0;
+  setitimer(ITIMER_REAL, &store,0);
+
+  signal(SIGALRM, timer);
+  signal(SIGINT, quit);
+
   //Handle new client connections
   while (1){
     socklen_t clientLen = sizeof(client);
@@ -151,20 +240,6 @@ int main(int argc, char** argv){
       continue;
     }
   }
-  
-
-  //when client connects, launch a thread with clientCommandWrapper: takes in an option and runs either create or serve or quit as shown above, and passes in same arguements
-
-  serviceID = 1;
-  //everytime any client asks for a serviceID, send mutexed serviceID++ to give a new unique value
-
-
-
-  //need session acceptor thread and method
-
-  //need to figure out 15 sec printing w/ sigint, server shutdown w/ ctrl c
-
-  //need to put in mutexes for above methods when relevant
 
   return 0;
 }
