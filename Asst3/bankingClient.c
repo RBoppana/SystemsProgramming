@@ -60,6 +60,7 @@ void* userPrompt(void* arg){
     }else{
       printf("Please enter a valid command. Keep in mind that no account is in service.");
     }
+    //sleep 2 sec
   }
   }*/
 
