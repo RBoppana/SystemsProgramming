@@ -77,7 +77,7 @@ int main(int argc, char** argv){
 
   //Socket setup
   int port = atoi(argv[2]);
-  if (port == 0){
+  if (port <= 0){
     fprintf(stderr, "Invalid port number.\n");
     return -1;
   }
