@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "bankingServer.h"
+#include <signal.h>
+#include <sys/time.h>
 
 //Automated Threading Memechine
 
@@ -25,8 +27,10 @@ typedef struct Node{
 Node* Bank;
 Node* currentAccount;
 int serviceID;
+int seconds = 0;
 
 int createAccount(char* name){
+	//mutex
 	Node* ptr = Bank;
 	while(ptr){
 		if(strcmp(name, ptr->accn->accName) == 0) return -2; //duplicate account
@@ -47,18 +51,18 @@ int createAccount(char* name){
 	}
 	newNode->next = Bank;
 	Bank = newNode;
+	//unlock mutex
 	return 1; //success
 }
 
 int serve(char* name, int option, float amount, int inputServiceID){
+	//mutex
 	Node* ptr = Bank;
 	while(ptr){
 		if(strcmp(ptr->accn->accName, name) == 0){
 			currentAccount = ptr->accn;
 			if(currentAccount->inSessionFlag == 0){
-				//mutex
 				currentAccount->inSessionFlag = inputServiceID; //account wasn't being serviced
-				//unlock
 			}
 			if(currentAccount->inSessionFlag != inputServiceID){
 				return -2; //account in service by another account
@@ -82,11 +86,8 @@ int serve(char* name, int option, float amount, int inputServiceID){
 			break;
 		}
 	}
+	//unlock mutex
 	return -1; //account doesnt exist
-}
-
-int quit(){
-
 }
 
 int printBankAccnsList(){
@@ -106,18 +107,52 @@ int clientCommandWrapper(){
 
 }
 
-int main(int argc, char** argv){
-
-	serviceID = 1;
-	//everytime any client asks for a serviceID, send mutexed serviceID++ to give a new unique value
-
-	//when client connects, launch a thread with clientCommandWrapper: takes in an option and runs either create or serve or quit as shown above, and passes in same arguements
-
-	//need session acceptor thread and method
-
-	//need to figure out 15 sec printing w/ sigint, server shutdown w/ ctrl c
-
-	//need to put in mutexes for above methods when relevant
-
-	return 0;
+void timer(int i){
+  struct itimerval store;
+  signal(SIGALRM, timer);
+  seconds += 15;
+  printBankAccnsList();
+  store.it_interval.tv_sec = 0;
+  store.it_interval.tv_usec = 0;
+  store.it_value.tv_sec = 15; 
+  store.it_value.tv_usec = 0;
+  setitimer(ITIMER_REAL, &store,0);
 }
+
+void quit(int i){
+  signal(SIGINT, quit);
+	//close all threads etc
+  exit(0);
+}
+
+int main(int argc, char** argv){
+	serviceID = 1;
+
+	//put server bind listen port shit here
+
+	struct itimerval store;
+  store.it_interval.tv_sec = 0;
+  store.it_interval.tv_usec = 0;
+  store.it_value.tv_sec = 15; 
+  store.it_value.tv_usec = 0;
+  setitimer(ITIMER_REAL, &store,0);
+
+  signal(SIGALRM, timer);
+  signal(SIGINT, quit);
+
+  while(1){
+    //server takes connections/launches threads
+  }
+
+  return 0;
+}
+
+//everytime any client asks for a serviceID, send mutexed serviceID++ to give a new unique value
+
+//when client connects, launch a thread with clientCommandWrapper: takes in an option and runs either create or serve or quit as shown above, and passes in same arguements
+
+//need session acceptor thread and method
+
+//need to figure out 15 sec printing w/ sigint, server shutdown w/ ctrl c
+
+//need to put in mutexes for above methods when relevant
