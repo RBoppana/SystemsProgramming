@@ -15,6 +15,8 @@
 
 //Automated Threading Memechine
 
+#define INTERVAL 10
+
 typedef struct Account{
   char* accName;
   float balance;
@@ -29,11 +31,12 @@ typedef struct Node{
 Node* Bank;
 Account* currentAccount;
 int serviceID;
-int seconds;
-int keepRunning;
+int seconds = 0;
+int keepRunning = 1;
+pthread_mutex_t accnMutex;
 
 int createAccount(char* name){
-	//mutex
+	pthread_mutex_lock(&accnMutex);
 	Node* ptr = Bank;
 	while(ptr){
 		if(strcmp(name, ptr->accn->accName) == 0) return -2; //duplicate account
@@ -52,9 +55,10 @@ int createAccount(char* name){
 		free(newAccount);
 		return -1; //out of memory - couldnt create
 	}
+  newNode->accn = newAccount;
 	newNode->next = Bank;
 	Bank = newNode;
-	//unlock mutex
+	pthread_mutex_unlock(&accnMutex);
 	return 1; //success
 }
 
@@ -89,15 +93,15 @@ int serve(char* name, int option, float amount, int inputServiceID){
       }
       break;
     }
+    ptr = ptr->next;
   }
   return -1; //account doesnt exist
 }
 
 int printBankAccnsList(){
-  //mutex bank list
+  pthread_mutex_lock(&accnMutex);
   Node* ptr = Bank;
-  printf("---");
-  if(!ptr) printf("No account data yet");
+  if(!ptr) printf("No account data yet.\n");
   while(ptr){
     printf("%s\t%f\t", ptr->accn->accName, ptr->accn->balance);
     if(ptr->accn->inSessionFlag > 0) printf("IN SERVICE");
@@ -105,7 +109,7 @@ int printBankAccnsList(){
     ptr = ptr->next;
   }
   free(ptr);
-  //unlock mutex
+  pthread_mutex_unlock(&accnMutex);
   return 1;
 }
 
@@ -132,17 +136,21 @@ void* clientCommandWrapper(void* arg){
 void timer(int i){
   struct itimerval store;
   signal(SIGALRM, timer);
-  seconds += 15;
+  seconds += INTERVAL;
   printBankAccnsList();
+  //printf("3 more secs");
+  fflush(stdout);
   store.it_interval.tv_sec = 0;
   store.it_interval.tv_usec = 0;
-  store.it_value.tv_sec = 15;
+  store.it_value.tv_sec = INTERVAL;
   store.it_value.tv_usec = 0;
   setitimer(ITIMER_REAL, &store,0);
 }
 
 void quit(int i){
 	keepRunning = 0;
+  printf("Server Shutting down!!\n");
+  free(Bank);
   exit(0);
 }
 
@@ -153,8 +161,6 @@ int main(int argc, char** argv){
   }
 
   serviceID = 1;
-  seconds = 0;
-  keepRunning = 1;
 
   //Socket setup
   int port = atoi(argv[1]);
@@ -183,16 +189,15 @@ int main(int argc, char** argv){
   struct itimerval store;
   store.it_interval.tv_sec = 0;
   store.it_interval.tv_usec = 0;
-  store.it_value.tv_sec = 15;
+  store.it_value.tv_sec = INTERVAL;
   store.it_value.tv_usec = 0;
   setitimer(ITIMER_REAL, &store, 0);
 
   signal(SIGALRM, timer);
   signal(SIGINT, quit);
-  printf("just set signals");
 
   //Handle new client connections
-  while (keepRunning == 1){
+  while (keepRunning){
     socklen_t clientLen = sizeof(client);
     int newfd = accept(socketfd, (struct sockaddr*) &client, &clientLen);
     if (newfd < 0){
