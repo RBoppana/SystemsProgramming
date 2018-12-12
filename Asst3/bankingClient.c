@@ -14,29 +14,42 @@ pthread_t inputThread, outputThread;
 
 void* userPrompt(void* arg){
   int socketfd = *(int*)arg;
+  int inService = 0;
+  char input[264]; //Max length of input string ("create " + 256 characters)
+  char message[264];
+  char response[1000];
+  char command[11], argument[257];
 
   while(1){
-    printf("Please enter a command: ");
-    char command[10];
-    scanf("%s", command);
+    fprintf(stdout, "Please enter a command: ");
+    fgets(input, 264);
+    if(!strchr(answer, '\n')){ //if newline does not exist
+      while(fgetc(stdin) != '\n'); //discard until newline
+    }
+    fprintf(stdout, "\n");
+    sscanf(input, "%10s %256[^\n]s", command, argument);
+
     if(strcmp(command, "create") == 0){
-      char name[257];
-      scanf("%s", name);
-      char string[7 + strlen(name) + 1];
-      snprintf(string, sizeof(string), "create\n%s", name);
+      if (inService == 1){
+        fprintf(stdout, "End the current session before creating a new account.\n");
+        continue;
+      }
+      snprintf(message, sizeof(message), "create\n%s", argument);
+      write(socketfd, message, strlen(message) + 1);
+    }/*else if(strcmp(command, "serve") == 0){      
+      if (inService == 1){
+        fprintf(stdout, "End the current session before serving a different account.")
+      }
+      char string[6 + strlen(argument) + 1];
+      snprintf(string, sizeof(string), "serve\n%s", argument);
       write(socketfd, string, strlen(string));
-      fprintf(stdout, "data sent.\n");
-      fflush(stdout);
-    }/*else if(strcmp(command, "serve") == 0){
-      int serviceID = //get unique serviceID from server -- server always sends new incremented value
-      char name[257];
-      scanf("%s", name);
-      //send data to server -- serve(name, -1, -1, serviceID) 
+
       if(serviceAcceptance == -2){
-        printf("Account already in service!\n");
+        fprintf(stdout, "Account already in service!\n");
       }else if(serviceAcceptance == -1){
-        printf("Account does not exist.\n")
+        fprintf(stdout, "Account does not exist.\n")
       }else{
+        int serviceID = //get unique serviceID from server -- server always sends new incremented value
         scanf("%s", command);
         while(strcmp(command, "end") != 0){
           if(strcmp(command, "deposit") == 0){
@@ -52,28 +65,34 @@ void* userPrompt(void* arg){
           }else if(strcmp(command, "quit") == 0){
             //send quit to server and do all quit stuff
           }else if(strcmp(command, "create") == 0){
-            printf("Please exist the service session to create an account.\n");
+            fprintf(stdout, "Please exist the service session to create an account.\n");
           }else{
-            printf("Please enter a valid command, you are currently in service of account: %s.\n", name);
+            fprintf(stdout, "Please enter a valid command, you are currently in service of account: %s.\n", name);
           }
         }
         //send end to server -- serve(name, 4, -1, serviceID)
-	}      
+      }      
     }else if(strcmp(command, "quit") == 0){
       //send quit to server and do all quit stuff
-    }else{
-      printf("Please enter a valid command. Keep in mind that no account is in service.");
-      }*/
+    }*/else{
+      fprintf(stdout, "Please enter a valid command.\n");
+    }
     sleep(2);
   }
-}
 
-void* serverResponse(void* arg){
-  //int socketfd = *(int*)arg;
   return NULL;
 }
 
-int serviceAcceptance; //marked by server response when serve is called
+void* serverResponse(void* arg){
+  int socketfd = *(int*)arg;
+
+  while(1){
+    read(socketfd, response, 1000);
+    fprintf(stdout, "%s\n", response);
+  }
+
+  return NULL;
+}
 
 int main(int argc, char** argv){
   if (argc != 3){

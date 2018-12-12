@@ -111,11 +111,21 @@ int printBankAccnsList(){
 void* clientCommandWrapper(void* arg){
   pthread_detach(pthread_self());
   int socketfd = *(int*)arg;
+  int inService = 0;
+  char message[264];
+  char response[1000];
 
-  char command[265];
-  read(socketfd, command, 264);
-  fprintf(stdout, command);
-  fflush(stdout);
+  while(1){
+    char command[264];
+    read(socketfd, command, 264);
+
+    fprintf(stdout, "%s\n", command);
+    fflush(stdout);
+
+    snprintf(message, sizeof(message), "If you're reading this, you have succeeded!");
+    write(socketfd, message, strlen(message) + 1);
+  }
+  
   return NULL;
 }
 /*
