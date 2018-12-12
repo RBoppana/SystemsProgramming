@@ -27,12 +27,11 @@ typedef struct Node{
 } Node;
 
 Node* Bank;
-Node* currentAccount;
+Account* currentAccount;
 int serviceID;
-int seconds = 0;
-int keepRunning = 1;
+int seconds;
+int keepRunning;
 
-/*
 int createAccount(char* name){
 	//mutex
 	Node* ptr = Bank;
@@ -97,6 +96,8 @@ int serve(char* name, int option, float amount, int inputServiceID){
 int printBankAccnsList(){
   //mutex bank list
   Node* ptr = Bank;
+  printf("---");
+  if(!ptr) printf("No account data yet");
   while(ptr){
     printf("%s\t%f\t", ptr->accn->accName, ptr->accn->balance);
     if(ptr->accn->inSessionFlag > 0) printf("IN SERVICE");
@@ -105,8 +106,8 @@ int printBankAccnsList(){
   }
   free(ptr);
   //unlock mutex
+  return 1;
 }
-*/
 
 void* clientCommandWrapper(void* arg){
   pthread_detach(pthread_self());
@@ -126,10 +127,10 @@ void* clientCommandWrapper(void* arg){
     snprintf(response, sizeof(response), "If you're reading this, you have succeeded!");
     write(socketfd, response, strlen(response) + 1);
   }
-  
+
   return NULL;
 }
-/*
+
 void timer(int i){
   struct itimerval store;
   signal(SIGALRM, timer);
@@ -137,15 +138,16 @@ void timer(int i){
   printBankAccnsList();
   store.it_interval.tv_sec = 0;
   store.it_interval.tv_usec = 0;
-  store.it_value.tv_sec = 15; 
+  store.it_value.tv_sec = 15;
   store.it_value.tv_usec = 0;
   setitimer(ITIMER_REAL, &store,0);
 }
 
 void quit(int i){
 	keepRunning = 0;
+  exit(0);
 }
-*/
+
 int main(int argc, char** argv){
   if (argc != 2){
     fprintf(stderr, "Please specify the port of the server.\n");
@@ -153,6 +155,8 @@ int main(int argc, char** argv){
   }
 
   serviceID = 1;
+  seconds = 0;
+  keepRunning = 1;
 
   //Socket setup
   int port = atoi(argv[1]);
@@ -177,19 +181,20 @@ int main(int argc, char** argv){
   fprintf(stdout, "Server started.\n");
 
   //Setup 15 second loop and ctrl c interrupt
-  /*
+
   struct itimerval store;
   store.it_interval.tv_sec = 0;
   store.it_interval.tv_usec = 0;
-  store.it_value.tv_sec = 15; 
+  store.it_value.tv_sec = 15;
   store.it_value.tv_usec = 0;
-  setitimer(ITIMER_REAL, &store,0);
+  setitimer(ITIMER_REAL, &store, 0);
 
   signal(SIGALRM, timer);
-  signal(SIGINT, quit);*/
+  signal(SIGINT, quit);
+  printf("just set signals");
 
   //Handle new client connections
-  while (keepRunning){
+  while (keepRunning == 1){
     socklen_t clientLen = sizeof(client);
     int newfd = accept(socketfd, (struct sockaddr*) &client, &clientLen);
     if (newfd < 0){

@@ -8,7 +8,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netdb.h>
 
 pthread_t inputThread, outputThread;
 int inService = 0;
@@ -61,11 +61,11 @@ void* userPrompt(void* arg){
           if(strcmp(command, "deposit") == 0){
             float amount;
             scanf("%f", amount);
-            //send data to server -- serve(name, 1, amount, serviceID) 
+            //send data to server -- serve(name, 1, amount, serviceID)
           }else if(strcmp(command, "withdraw") == 0){
             float amount;
             scanf("%f", amount);
-            //send data to server -- serve(name, 2, amount, serviceID) 
+            //send data to server -- serve(name, 2, amount, serviceID)
           }else if(strcmp(command, "query") == 0){
             //send query to server -- serve(name, 3, -1, serviceID)
           }else if(strcmp(command, "quit") == 0){
@@ -77,7 +77,7 @@ void* userPrompt(void* arg){
           }
         }
         //send end to server -- serve(name, 4, -1, serviceID)
-      }      
+      }
     }else if(strcmp(command, "quit") == 0){
       //send quit to server and do all quit stuff
     }else{
