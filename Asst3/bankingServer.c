@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 
 //Automated Threading Memechine
 
@@ -31,7 +32,7 @@ int serviceID;
 int seconds = 0;
 int keepRunning = 1;
 
-
+/*
 int createAccount(char* name){
 	//mutex
 	Node* ptr = Bank;
@@ -105,18 +106,19 @@ int printBankAccnsList(){
   free(ptr);
   //unlock mutex
 }
+*/
 
 void* clientCommandWrapper(void* arg){
   pthread_detach(pthread_self());
-  int socketfd = *arg;
+  int socketfd = *(int*)arg;
 
   char command[265];
   read(socketfd, command, 264);
-  fprintf(command);
+  fprintf(stdout, command);
   fflush(stdout);
   return NULL;
 }
-
+/*
 void timer(int i){
   struct itimerval store;
   signal(SIGALRM, timer);
@@ -132,7 +134,7 @@ void timer(int i){
 void quit(int i){
 	keepRunning = 0;
 }
-
+*/
 int main(int argc, char** argv){
   if (argc != 2){
     fprintf(stderr, "Please specify the port of the server.\n");
@@ -158,6 +160,7 @@ int main(int argc, char** argv){
   server.sin_addr.s_addr = INADDR_ANY;
   if (bind(socketfd, (struct sockaddr*) &server, sizeof(server)) < 0){
     fprintf(stderr, "Error binding socket.\n");
+    return -1;
   }
   listen(socketfd, 5);
 
@@ -170,8 +173,8 @@ int main(int argc, char** argv){
   store.it_value.tv_usec = 0;
   setitimer(ITIMER_REAL, &store,0);
 
-  signal(SIGALRM, timer);
-  signal(SIGINT, quit);
+  //signal(SIGALRM, timer);
+  //signal(SIGINT, quit);
 
   //Handle new client connections
   while (keepRunning){
@@ -184,10 +187,10 @@ int main(int argc, char** argv){
     pthread_t thread;
     if (pthread_create(&thread, NULL, clientCommandWrapper, &newfd) != 0){
       fprintf(stderr, "Error creating client thread.\n");
-      newfd.close();
+      close(newfd);
       continue;
     }
-    fprintf(stderr, "Accepted connection from %s.\n", client.sin_addr.s_addr);
+    fprintf(stderr, "Accepted connection from %s.\n", inet_ntoa(client.sin_addr));
   }
 
   //disconnect and close all threads etc

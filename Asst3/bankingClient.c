@@ -13,8 +13,7 @@
 pthread_t inputThread, outputThread;
 
 void* userPrompt(void* arg){
-  pthread_detach(pthread_self());
-  int socketfd = *arg;
+  int socketfd = *(int*)arg;
 
   while(1){
     printf("Please enter a command: ");
@@ -26,7 +25,9 @@ void* userPrompt(void* arg){
       char string[7 + strlen(name) + 1];
       snprintf(string, sizeof(string), "create\n%s", name);
       write(socketfd, string, strlen(string));
-    }else if(strcmp(command, "serve") == 0){
+      fprintf(stdout, "data sent.\n");
+      fflush(stdout);
+    }/*else if(strcmp(command, "serve") == 0){
       int serviceID = //get unique serviceID from server -- server always sends new incremented value
       char name[257];
       scanf("%s", name);
@@ -57,17 +58,18 @@ void* userPrompt(void* arg){
           }
         }
         //send end to server -- serve(name, 4, -1, serviceID)
-      }      
+	}      
     }else if(strcmp(command, "quit") == 0){
       //send quit to server and do all quit stuff
     }else{
       printf("Please enter a valid command. Keep in mind that no account is in service.");
-    }
+      }*/
     sleep(2);
   }
 }
 
 void* serverResponse(void* arg){
+  //int socketfd = *(int*)arg;
   return NULL;
 }
 
@@ -126,5 +128,9 @@ int main(int argc, char** argv){
       return -1;
   }
 
-  pthread_exit();
+  pthread_join(inputThread, NULL);
+  pthread_join(outputThread, NULL);
+  fprintf(stdout, "Client session complete.\n");
+
+  return 0;
 }
