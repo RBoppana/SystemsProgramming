@@ -11,10 +11,11 @@
 #include <netdb.h> 
 
 pthread_t inputThread, outputThread;
+int inService = 0;
+pthread_mutex_t serviceMutex;
 
 void* userPrompt(void* arg){
   int socketfd = *(int*)arg;
-  int inService = 0;
   char input[264]; //Max length of input string ("create " + 256 characters)
   char message[264];
   char command[11], argument[257];
@@ -28,7 +29,7 @@ void* userPrompt(void* arg){
     command[0] = '\0';
     argument[0] = '\0';
     sscanf(input, "%10s %256[^\n]s", command, argument);
-    fprintf(stdout, "command: %s, argument: %s\n", command, argument);
+    //fprintf(stdout, "command: %s, argument: %s\n", command, argument);
 
     if(strcmp(command, "create") == 0){
       if (inService == 1){
@@ -36,14 +37,14 @@ void* userPrompt(void* arg){
         continue;
       }
       if (strlen(argument) == 0){
-	fprintf(stdout, "Please provide an account name.\n");
-	continue;
+        fprintf(stdout, "Please provide an account name.\n");
+        continue;
       }
       snprintf(message, sizeof(message), "create\n%s", argument);
       write(socketfd, message, strlen(message) + 1);
-    }/*else if(strcmp(command, "serve") == 0){      
+    }else if(strcmp(command, "serve") == 0){      
       if (inService == 1){
-        fprintf(stdout, "End the current session before serving a different account.")
+        fprintf(stdout, "Please end the current session before serving a different account.")
       }
       char string[6 + strlen(argument) + 1];
       snprintf(string, sizeof(string), "serve\n%s", argument);
@@ -79,7 +80,7 @@ void* userPrompt(void* arg){
       }      
     }else if(strcmp(command, "quit") == 0){
       //send quit to server and do all quit stuff
-    }*/else{
+    }else{
       fprintf(stdout, "Not a valid command.\n");
       continue;
     }
@@ -92,10 +93,34 @@ void* userPrompt(void* arg){
 void* serverResponse(void* arg){
   int socketfd = *(int*)arg;
   char response[1000];
+  char command[11], argument[257];
 
   while(1){
     read(socketfd, response, 1000);
-    fprintf(stdout, "%s\n", response);
+    sscanf(response, "%10s\n%256s");
+    if (strcmp(command, "create") == 0){
+      if (strcmp(argument, "1") == 0){
+        fprintf(stdout, "Account created successfully.\n");
+      } else if (strcmp(argument, "-1") == 0){
+        fprintf(stdout, "Unable to create account.\n");
+      } else if (strcmp(argument, "-2") == 0){
+        fprintf(stdout, "Account name already exists.\n");
+      }
+    } else if(strcmp(command, "serve") == 0){
+      if (strcmp(argument, "1") == 0){
+        pthread_mutex_lock(&serviceMutex);
+        inService = 1;
+        pthread_mutex_unlock(&serviceMutex);
+        fprintf(stdout, "Successfully serving.\n");
+      }
+      if (strcmp(argument, "-1") == 0){
+        fprintf(stdout, "Account does not exist.\n");
+      } else if(strcmp(argument, "-2") == 0){
+        fprintf(stdout, "Account is already in service. Please try again later.\n");
+      }
+    } else {
+      fprintf(stderr, "Error parsing server message.\n");
+    }
   }
 
   return NULL;
