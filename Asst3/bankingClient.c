@@ -17,22 +17,27 @@ void* userPrompt(void* arg){
   int inService = 0;
   char input[264]; //Max length of input string ("create " + 256 characters)
   char message[264];
-  char response[1000];
   char command[11], argument[257];
 
   while(1){
-    fprintf(stdout, "Please enter a command: ");
-    fgets(input, 264);
-    if(!strchr(answer, '\n')){ //if newline does not exist
+    fprintf(stdout, "\nEnter a command: ");
+    fgets(input, 264, stdin);
+    if(!strchr(input, '\n')){ //if newline does not exist
       while(fgetc(stdin) != '\n'); //discard until newline
     }
-    fprintf(stdout, "\n");
+    command[0] = '\0';
+    argument[0] = '\0';
     sscanf(input, "%10s %256[^\n]s", command, argument);
+    fprintf(stdout, "command: %s, argument: %s\n", command, argument);
 
     if(strcmp(command, "create") == 0){
       if (inService == 1){
-        fprintf(stdout, "End the current session before creating a new account.\n");
+        fprintf(stdout, "Please end the current session before creating a new account.\n");
         continue;
+      }
+      if (strlen(argument) == 0){
+	fprintf(stdout, "Please provide an account name.\n");
+	continue;
       }
       snprintf(message, sizeof(message), "create\n%s", argument);
       write(socketfd, message, strlen(message) + 1);
@@ -75,7 +80,8 @@ void* userPrompt(void* arg){
     }else if(strcmp(command, "quit") == 0){
       //send quit to server and do all quit stuff
     }*/else{
-      fprintf(stdout, "Please enter a valid command.\n");
+      fprintf(stdout, "Not a valid command.\n");
+      continue;
     }
     sleep(2);
   }
@@ -85,6 +91,7 @@ void* userPrompt(void* arg){
 
 void* serverResponse(void* arg){
   int socketfd = *(int*)arg;
+  char response[1000];
 
   while(1){
     read(socketfd, response, 1000);

@@ -111,19 +111,18 @@ int printBankAccnsList(){
 void* clientCommandWrapper(void* arg){
   pthread_detach(pthread_self());
   int socketfd = *(int*)arg;
-  int inService = 0;
+  //int inService = 0;
   char message[264];
   char response[1000];
 
   while(1){
-    char command[264];
-    read(socketfd, command, 264);
+    if (read(socketfd, message, 264) == 0) break;
 
-    fprintf(stdout, "%s\n", command);
+    fprintf(stdout, "%s\n", message);
     fflush(stdout);
 
-    snprintf(message, sizeof(message), "If you're reading this, you have succeeded!");
-    write(socketfd, message, strlen(message) + 1);
+    snprintf(response, sizeof(response), "If you're reading this, you have succeeded!");
+    write(socketfd, response, strlen(response) + 1);
   }
   
   return NULL;
@@ -173,18 +172,19 @@ int main(int argc, char** argv){
     return -1;
   }
   listen(socketfd, 5);
+  fprintf(stdout, "Server started.\n");
 
   //Setup 15 second loop and ctrl c interrupt
-
-	struct itimerval store;
+  /*
+  struct itimerval store;
   store.it_interval.tv_sec = 0;
   store.it_interval.tv_usec = 0;
   store.it_value.tv_sec = 15; 
   store.it_value.tv_usec = 0;
   setitimer(ITIMER_REAL, &store,0);
 
-  //signal(SIGALRM, timer);
-  //signal(SIGINT, quit);
+  signal(SIGALRM, timer);
+  signal(SIGINT, quit);*/
 
   //Handle new client connections
   while (keepRunning){
