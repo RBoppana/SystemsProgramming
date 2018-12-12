@@ -31,56 +31,61 @@ void* userPrompt(void* arg){
     sscanf(input, "%10s %256[^\n]s", command, argument);
     //fprintf(stdout, "command: %s, argument: %s\n", command, argument);
 
-    if(strcmp(command, "create") == 0){
-      if (inService == 1){
-        fprintf(stdout, "Please end the current session before creating a new account.\n");
+    int tempService;
+    pthread_mutex_lock(&serviceLock);
+    tempService = inService;
+    pthread_mutex_unlock(&serviceLock);
+
+    if(strcmp(command, "create") == 0 || strcmp(command, "serve") == 0){
+      if (tempService == 1){
+        fprintf(stdout, "Please end the current session first.\n");
         continue;
       }
       if (strlen(argument) == 0){
         fprintf(stdout, "Please provide an account name.\n");
         continue;
       }
-      snprintf(message, sizeof(message), "create\n%s", argument);
+      snprintf(message, sizeof(message), "%s\n%s", command, argument);
       write(socketfd, message, strlen(message) + 1);
-    }else if(strcmp(command, "serve") == 0){      
-      if (inService == 1){
-        fprintf(stdout, "Please end the current session before serving a different account.")
+    }
+    else if (strcmp(command, "end") == 0){
+      if (tempService == 0){
+        fprintf(stdout, "No account is currently being served.\n");
+        continue;
       }
-      char string[6 + strlen(argument) + 1];
-      snprintf(string, sizeof(string), "serve\n%s", argument);
-      write(socketfd, string, strlen(string));
-
-      if(serviceAcceptance == -2){
-        fprintf(stdout, "Account already in service!\n");
-      }else if(serviceAcceptance == -1){
-        fprintf(stdout, "Account does not exist.\n")
-      }else{
-        int serviceID = //get unique serviceID from server -- server always sends new incremented value
-        scanf("%s", command);
-        while(strcmp(command, "end") != 0){
-          if(strcmp(command, "deposit") == 0){
-            float amount;
-            scanf("%f", amount);
-            //send data to server -- serve(name, 1, amount, serviceID)
-          }else if(strcmp(command, "withdraw") == 0){
-            float amount;
-            scanf("%f", amount);
-            //send data to server -- serve(name, 2, amount, serviceID)
-          }else if(strcmp(command, "query") == 0){
-            //send query to server -- serve(name, 3, -1, serviceID)
-          }else if(strcmp(command, "quit") == 0){
-            //send quit to server and do all quit stuff
-          }else if(strcmp(command, "create") == 0){
-            fprintf(stdout, "Please exist the service session to create an account.\n");
-          }else{
-            fprintf(stdout, "Please enter a valid command, you are currently in service of account: %s.\n", name);
-          }
-        }
-        //send end to server -- serve(name, 4, -1, serviceID)
+      pthread_mutex_lock(&serviceMutex);
+      inService = 0;
+      pthread_mutex_unlock(&serviceMutex);
+      fprintf(stdout, "Service session ended.\n");
+    }
+    else if (strcmp(command, "deposit") == 0 || strcmp(command, "withdraw") == 0){
+      if (tempService == 0){
+        fprintf(stdout, "No account is currently being served.\n");
+        continue;
       }
-    }else if(strcmp(command, "quit") == 0){
-      //send quit to server and do all quit stuff
-    }else{
+      errno = 0;
+      double amount = strtod(argument);
+      if (errno != 0 || amount <= 0){
+        fprintf(stdout, "Please provide a positive value.\n");
+        continue;
+      }
+      snprintf(message, sizeof(message), "%s\n%lf", command, amount);
+      write(socketfd, message, strlen(message) + 1);
+    }
+    else if (strcmp(command, "query") == 0){
+      if (tempService == 0){
+        fprintf(stdout, "No account is currently being served.\n");
+        continue;
+      }
+      write(socketfd, "query", 6);
+    }
+    else if (strcmp(command, "quit") == 0){
+      fprintf(stdout, "Disconnecting from the server...");
+      close(socketfd);
+      pthread_cancel(outputThread);
+      break;
+    } 
+    else {
       fprintf(stdout, "Not a valid command.\n");
       continue;
     }
@@ -96,7 +101,13 @@ void* serverResponse(void* arg){
   char command[11], argument[257];
 
   while(1){
-    read(socketfd, response, 1000);
+    if (read(socketfd, response, 1000) == 0){
+      fprintf(stdout, "Server disconnected.");
+      close(socketfd);
+      pthread_cancel(inputThread);
+      break;
+    }
+
     sscanf(response, "%10s\n%256s");
     if (strcmp(command, "create") == 0){
       if (strcmp(argument, "1") == 0){
@@ -105,8 +116,11 @@ void* serverResponse(void* arg){
         fprintf(stdout, "Unable to create account.\n");
       } else if (strcmp(argument, "-2") == 0){
         fprintf(stdout, "Account name already exists.\n");
+      } else {
+        fprintf(stderr, "Error parsing server message.\n");
       }
-    } else if(strcmp(command, "serve") == 0){
+    } 
+    else if(strcmp(command, "serve") == 0){
       if (strcmp(argument, "1") == 0){
         pthread_mutex_lock(&serviceMutex);
         inService = 1;
@@ -117,8 +131,36 @@ void* serverResponse(void* arg){
         fprintf(stdout, "Account does not exist.\n");
       } else if(strcmp(argument, "-2") == 0){
         fprintf(stdout, "Account is already in service. Please try again later.\n");
+      } else {
+        fprintf(stderr, "Error parsing server message.\n");
       }
-    } else {
+    } 
+    else if (strcmp(command, "deposit") == 0){
+      if (strcmp(argument, "1")){
+        fprintf(stdout, "Successfully deposited.\n");
+      } else {
+        fprintf(stderr, "Error parsing server message.\n");
+      }
+    } 
+    else if (strcmp(command, "withdraw") == 0){
+      if (strcmp(argument, "1")){
+        fprintf(stdout, "Successfully withdrawn.\n");
+      } else if (strcmp(argument, "-3")){
+        fprintf(stdout, "Insufficient funds.\n");
+      } else {
+        fprintf(stderr, "Error parsing server message.\n");
+      }
+    }
+    else if (strcmp(command, "query") == 0){
+      errno = 0;
+      double amount = strtod(argument);
+      if (errno == 0){
+        fprintf(stdout, "Current account balance: $%.2lf\n", amount);
+      } else {
+        fprintf(stderr, "Error parsing server message.\n");
+      }
+    }
+    else {
       fprintf(stderr, "Error parsing server message.\n");
     }
   }
@@ -133,8 +175,8 @@ int main(int argc, char** argv){
   }
 
   //Socket setup
-  int port = atoi(argv[2]);
-  if (port <= 0){
+  int port = strtol(argv[2]);
+  if (port <= 8192){
     fprintf(stderr, "Invalid port number.\n");
     return -1;
   }

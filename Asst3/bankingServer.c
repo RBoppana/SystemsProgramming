@@ -159,8 +159,8 @@ int main(int argc, char** argv){
   keepRunning = 1;
 
   //Socket setup
-  int port = atoi(argv[1]);
-  if (port <= 0){
+  int port = strtol(argv[1]);
+  if (port <= 8192){
     fprintf(stderr, "Invalid port number.\n");
     return -1;
   }
