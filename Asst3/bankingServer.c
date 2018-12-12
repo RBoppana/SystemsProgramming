@@ -123,6 +123,8 @@ void* clientCommandWrapper(void* arg){
   while(1){
     if (read(socketfd, message, 264) == 0) break;
 
+    scanf("%10[^\n]s\n%256s");
+
     fprintf(stdout, "%s\n", message);
     fflush(stdout);
 
