@@ -63,38 +63,46 @@ int createAccount(char* name){
 }
 
 int serve(char* name, int option, float amount, int inputServiceID){
+  pthread_mutex_lock(&accnMutex);
   Node* ptr = Bank;
   while(ptr){
     if(strcmp(ptr->accn->accName, name) == 0){
       currentAccount = ptr->accn;
-      if(currentAccount->inSessionFlag == 0){
-        //mutex
-        currentAccount->inSessionFlag = inputServiceID; //account wasn't being serviced
-        //unlock
-      }
+      if(currentAccount->inSessionFlag == 0) currentAccount->inSessionFlag = inputServiceID; //account wasn't being serviced
       if(currentAccount->inSessionFlag != inputServiceID){
+        pthread_mutex_unlock(&accnMutex);
         return -2; //account in service by another account
       }
       switch(option){
         case 1: //deposit
           currentAccount->balance += amount;
+          pthread_mutex_unlock(&accnMutex);
           return 1;
         case 2: //withdraw
-          if((currentAccount->balance - amount) < 0) return -3; //negative balance
+          if((currentAccount->balance - amount) < 0){
+            pthread_mutex_unlock(&accnMutex);
+            return -3; //negative balance
+          } 
           currentAccount->balance -= amount;
+          pthread_mutex_unlock(&accnMutex);
           return 1;
         case 3: //query
-          return currentAccount->balance;
+          int res = currentAccount->balance;
+          pthread_mutex_unlock(&accnMutex);
+          return res;
         case 4: //end session
           currentAccount->inSessionFlag = 0;
+          pthread_mutex_unlock(&accnMutex);
           return 1; //successfully ended
         default:
+          pthread_mutex_unlock(&accnMutex);
           return 0; //idk
       }
       break;
     }
     ptr = ptr->next;
   }
+  pthread_mutex_unlock(&accnMutex);
   return -1; //account doesnt exist
 }
 
