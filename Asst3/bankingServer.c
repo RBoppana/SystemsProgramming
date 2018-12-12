@@ -152,7 +152,13 @@ void timer(int i){
 void quit(int i){
 	keepRunning = 0;
   printf("Server Shutting down!!\n");
-  free(Bank);
+  while(Bank){
+    Node* temp = Bank;
+    Bank = Bank->next;
+    free(temp->accn->accName);
+    free(temp->accn);
+    free(temp);
+  }
   exit(0);
 }
 
