@@ -28,7 +28,7 @@ typedef struct Node{
   struct Node* next;
 } Node;
 
-Node* Bank;
+Node* Bank = NULL;
 int seconds = 0;
 int keepRunning = 1;
 int serverfd;
@@ -41,11 +41,11 @@ int createAccount(char* name){
 		if(strcmp(name, ptr->accn->accName) == 0) return -2; //duplicate account
 		ptr = ptr->next;
 	}
-	free(ptr);
 
 	Account* newAccount = (Account*)malloc(sizeof(Account));
 	if(!newAccount) return -1; //out of memory - couldnt create
-	newAccount->accName = name;
+	newAccount->accName = (char*) malloc(strlen(name) + 1);
+	strcpy(newAccount->accName, name);
 	newAccount->balance = 0.0;
 	newAccount->inSessionFlag = 0;
 
@@ -145,7 +145,7 @@ void* clientCommandWrapper(void* arg){
     command[0] = '\0';
     argument[0] = '\0';
     sscanf(message, "%10s\n%256s", command, argument);
-    fprintf(stdout, "command: %s, argument: %s\n", command, argument);
+    //fprintf(stdout, "command: %s, argument: %s\n", command, argument);
 
     if (strcmp(command, "create") == 0){
       int result = createAccount(argument);
@@ -240,7 +240,7 @@ int main(int argc, char** argv){
   fprintf(stdout, "Server started.\n");
 
   //Setup 15 second loop and ctrl c interrupt
-
+  
   struct itimerval store;
   store.it_interval.tv_sec = 0;
   store.it_interval.tv_usec = 0;
@@ -250,7 +250,7 @@ int main(int argc, char** argv){
 
   signal(SIGALRM, timer);
   signal(SIGINT, quit);
-
+  
   //Handle new client connections
   while (keepRunning){
     socklen_t clientLen = sizeof(client);

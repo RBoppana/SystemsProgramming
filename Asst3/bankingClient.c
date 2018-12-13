@@ -85,7 +85,7 @@ void* userPrompt(void* arg){
         fprintf(stdout, "Please end the current session first.\n");
         continue;
       }
-      fprintf(stdout, "Disconnecting from the server...");
+      fprintf(stdout, "Disconnecting from the server...\n");
       close(socketfd);
       pthread_cancel(outputThread);
       break;
@@ -116,6 +116,8 @@ void* serverResponse(void* arg){
     command[0] = '\0';
     argument[0] = '\0';
     sscanf(response, "%10s\n%256s", command, argument);
+    //fprintf(stdout, "command: %s, argument: %s\n", command, argument); 
+
     if (strcmp(command, "create") == 0){
       if (strcmp(argument, "1") == 0){
         fprintf(stdout, "Account created successfully.\n");
@@ -133,8 +135,7 @@ void* serverResponse(void* arg){
         inService = 1;
         pthread_mutex_unlock(&serviceMutex);
         fprintf(stdout, "Successfully serving.\n");
-      }
-      if (strcmp(argument, "-1") == 0){
+      } else if (strcmp(argument, "-1") == 0){
         fprintf(stdout, "Account does not exist.\n");
       } else if(strcmp(argument, "-2") == 0){
         fprintf(stdout, "Account is already in service. Please try again later.\n");
@@ -143,23 +144,23 @@ void* serverResponse(void* arg){
       }
     } 
     else if (strcmp(command, "end") == 0){
-      if (strcmp(argument, "1")){
+      if (strcmp(argument, "1") == 0){
         fprintf(stdout, "Service session ended.\n");
       } else {
         fprintf(stderr, "Error parsing server message.\n");
       }
     }
     else if (strcmp(command, "deposit") == 0){
-      if (strcmp(argument, "1")){
+      if (strcmp(argument, "1") == 0){
         fprintf(stdout, "Successfully deposited.\n");
       } else {
         fprintf(stderr, "Error parsing server message.\n");
       }
     } 
     else if (strcmp(command, "withdraw") == 0){
-      if (strcmp(argument, "1")){
+      if (strcmp(argument, "1") == 0){
         fprintf(stdout, "Successfully withdrawn.\n");
-      } else if (strcmp(argument, "-3")){
+      } else if (strcmp(argument, "-3") == 0){
         fprintf(stdout, "Insufficient funds.\n");
       } else {
         fprintf(stderr, "Error parsing server message.\n");
