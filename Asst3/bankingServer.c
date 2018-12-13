@@ -19,7 +19,7 @@
 
 typedef struct Account{
   char* accName;
-  float balance;
+  double balance;
   int inSessionFlag;
 } Account;
 
@@ -29,8 +29,6 @@ typedef struct Node{
 } Node;
 
 Node* Bank;
-Account* currentAccount;
-int serviceID;
 int seconds = 0;
 int keepRunning = 1;
 pthread_mutex_t accnMutex;
@@ -62,18 +60,23 @@ int createAccount(char* name){
 	return 1; //success
 }
 
-int serve(char* name, int option, float amount, int inputServiceID){
+double serve(char* name, int option, double amount){
   pthread_mutex_lock(&accnMutex);
   Node* ptr = Bank;
   while(ptr){
-    if(strcmp(ptr->accn->accName, name) == 0){
-      currentAccount = ptr->accn;
-      if(currentAccount->inSessionFlag == 0) currentAccount->inSessionFlag = inputServiceID; //account wasn't being serviced
-      if(currentAccount->inSessionFlag != inputServiceID){
-        pthread_mutex_unlock(&accnMutex);
-        return -2; //account in service by another account
-      }
-      switch(option){
+    if(strcmp(ptr->accn->accName, name) != 0){
+      ptr = ptr->next;
+    } else {
+      Account* currentAccount = ptr->accn;
+      switch (option){
+        case 0: //serve
+          if (currentAccount->inSessionFlag == 0){
+            currentAccount->inSessionFlag = 1;
+            pthread_mutex_unlock(&accnMutex);
+            return 1;
+          } 
+          pthread_mutex_unlock(&accnMutex);
+          return -2;
         case 1: //deposit
           currentAccount->balance += amount;
           pthread_mutex_unlock(&accnMutex);
@@ -87,20 +90,19 @@ int serve(char* name, int option, float amount, int inputServiceID){
           pthread_mutex_unlock(&accnMutex);
           return 1;
         case 3: //query
-          int res = currentAccount->balance;
+          double res = currentAccount->balance;
           pthread_mutex_unlock(&accnMutex);
           return res;
         case 4: //end session
           currentAccount->inSessionFlag = 0;
           pthread_mutex_unlock(&accnMutex);
-          return 1; //successfully ended
+          return 1;
         default:
           pthread_mutex_unlock(&accnMutex);
-          return 0; //idk
+          return 0;
       }
       break;
     }
-    ptr = ptr->next;
   }
   pthread_mutex_unlock(&accnMutex);
   return -1; //account doesnt exist
@@ -124,20 +126,48 @@ int printBankAccnsList(){
 void* clientCommandWrapper(void* arg){
   pthread_detach(pthread_self());
   int socketfd = *(int*)arg;
-  //int inService = 0;
-  char message[264];
-  char response[1000];
+  char name[257];
+  name[0] = '\0';
+  char message[267];
+  char response[267];
+  char command[11], argument[257];
 
   while(1){
-    if (read(socketfd, message, 264) == 0) break;
+    if (read(socketfd, message, 267) == 0){
+      fprintf(stdout, "Client disconnected.\n");
+      close(socketfd);
+      serve(name, 4, NULL); //End any current session
+      break;
+    }
+    command[0] = '\0';
+    argument[0] = '\0';
+    sscanf(input, "%10s\n%256s", command, argument);
 
-    scanf("%10[^\n]s\n%256s");
-
-    fprintf(stdout, "%s\n", message);
-    fflush(stdout);
-
-    snprintf(response, sizeof(response), "If you're reading this, you have succeeded!");
-    write(socketfd, response, strlen(response) + 1);
+    if (strcmp(command, "create")){
+      int result = createAccount(argument);
+      snprintf(response, sizeof(response), "%s\n%s", command, result);
+      write(socketfd, response, strlen(response) + 1);
+    } else {
+      double result;
+      if (strcmp(command, "serve") == 0){
+        result = serve(argument, 0, NULL);
+        snprintf(name, sizeof(name), "%s", argument);
+      } else if (strcmp(command, "end") == 0){
+        result = serve(name, 4, NULL);
+      } else if (strcmp(command, "deposit") == 0){
+        double amount = strtod(argument);
+        result = serve(name, 1, amount);
+      } else if (strcmp(command, "withdraw") == 0){
+        double amount = strtod(argument);
+        result = serve(name, 2, amount);
+      } else if (strcmp(command, "query") == 0){
+        result = serve(name, 3, amount);
+      } else {
+        continue;
+      }
+      snprintf(response, sizeof(response), "%s\n%s", command, result);
+      write(socketfd, response, strlen(response) + 1);
+    }
   }
 
   return NULL;
@@ -159,7 +189,7 @@ void timer(int i){
 
 void quit(int i){
 	keepRunning = 0;
-  printf("Server Shutting down!!\n");
+  printf("\nServer shutting down.\n");
   while(Bank){
     Node* temp = Bank;
     Bank = Bank->next;
@@ -228,8 +258,6 @@ int main(int argc, char** argv){
     }
     fprintf(stderr, "Accepted connection from %s.\n", inet_ntoa(client.sin_addr));
   }
-
-  //disconnect and close all threads etc
 
   return 0;
 }

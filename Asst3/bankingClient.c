@@ -16,13 +16,13 @@ pthread_mutex_t serviceMutex;
 
 void* userPrompt(void* arg){
   int socketfd = *(int*)arg;
-  char input[264]; //Max length of input string ("create " + 256 characters)
-  char message[264];
+  char input[267]; //Max length of input string
+  char message[267];
   char command[11], argument[257];
 
   while(1){
     fprintf(stdout, "\nEnter a command: ");
-    fgets(input, 264, stdin);
+    fgets(input, 266, stdin);
     if(!strchr(input, '\n')){ //if newline does not exist
       while(fgetc(stdin) != '\n'); //discard until newline
     }
@@ -56,7 +56,7 @@ void* userPrompt(void* arg){
       pthread_mutex_lock(&serviceMutex);
       inService = 0;
       pthread_mutex_unlock(&serviceMutex);
-      fprintf(stdout, "Service session ended.\n");
+      write(socketfd, "end", 4);
     }
     else if (strcmp(command, "deposit") == 0 || strcmp(command, "withdraw") == 0){
       if (tempService == 0){
@@ -80,6 +80,10 @@ void* userPrompt(void* arg){
       write(socketfd, "query", 6);
     }
     else if (strcmp(command, "quit") == 0){
+      if (tempService == 1){
+        fprintf(stdout, "Please end the current session first.\n");
+        continue;
+      }
       fprintf(stdout, "Disconnecting from the server...");
       close(socketfd);
       pthread_cancel(outputThread);
@@ -97,12 +101,12 @@ void* userPrompt(void* arg){
 
 void* serverResponse(void* arg){
   int socketfd = *(int*)arg;
-  char response[1000];
+  char response[267];
   char command[11], argument[257];
 
   while(1){
-    if (read(socketfd, response, 1000) == 0){
-      fprintf(stdout, "Server disconnected.");
+    if (read(socketfd, response, 267) == 0){
+      fprintf(stdout, "Server disconnected.\n");
       close(socketfd);
       pthread_cancel(inputThread);
       break;
@@ -135,6 +139,13 @@ void* serverResponse(void* arg){
         fprintf(stderr, "Error parsing server message.\n");
       }
     } 
+    else if (strcmp(command, "end") == 0){
+      if (strcmp(argument, "1")){
+        fprintf(stdout, "Service session ended.\n");
+      } else {
+        fprintf(stderr, "Error parsing server message.\n");
+      }
+    }
     else if (strcmp(command, "deposit") == 0){
       if (strcmp(argument, "1")){
         fprintf(stdout, "Successfully deposited.\n");
