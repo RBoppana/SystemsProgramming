@@ -85,7 +85,7 @@ void* userPrompt(void* arg){
         fprintf(stdout, "Please end the current session first.\n");
         continue;
       }
-      fprintf(stdout, "Disconnecting from the server...\n");
+      fprintf(stdout, "\nDisconnecting from the server...\n");
       close(socketfd);
       pthread_cancel(outputThread);
       break;
