@@ -15,7 +15,7 @@
 
 //Automated Threading Memechine
 
-#define INTERVAL 10
+#define INTERVAL 15
 
 typedef struct Account{
   char* accName;
