@@ -15,7 +15,7 @@
 
 //Automated Threading Memechine
 
-#define INTERVAL 10
+#define INTERVAL 15
 
 typedef struct Account{
   char* accName;
@@ -31,6 +31,7 @@ typedef struct Node{
 Node* Bank;
 int seconds = 0;
 int keepRunning = 1;
+int serverfd;
 pthread_mutex_t accnMutex;
 
 int createAccount(char* name){
@@ -113,13 +114,14 @@ int printBankAccnsList(){
   pthread_mutex_lock(&accnMutex);
   Node* ptr = Bank;
   if(!ptr) printf("No account data yet.\n");
+  else printf("Account data:\n");
   while(ptr){
     printf("%s\t%f\t", ptr->accn->accName, ptr->accn->balance);
     if(ptr->accn->inSessionFlag > 0) printf("IN SERVICE");
     printf("\n");
     ptr = ptr->next;
   }
-  free(ptr);
+  printf("\n");
   pthread_mutex_unlock(&accnMutex);
   return 1;
 }
@@ -143,8 +145,9 @@ void* clientCommandWrapper(void* arg){
     command[0] = '\0';
     argument[0] = '\0';
     sscanf(message, "%10s\n%256s", command, argument);
+    fprintf(stdout, "command: %s, argument: %s\n", command, argument);
 
-    if (strcmp(command, "create")){
+    if (strcmp(command, "create") == 0){
       int result = createAccount(argument);
       snprintf(response, sizeof(response), "%s\n%d", command, result);
       write(socketfd, response, strlen(response) + 1);
@@ -194,7 +197,8 @@ void timer(int i){
 }
 
 void quit(int i){
-	keepRunning = 0;
+  keepRunning = 0;
+  close(serverfd);
   printf("\nServer shutting down.\n");
   while(Bank){
     Node* temp = Bank;
@@ -218,20 +222,21 @@ int main(int argc, char** argv){
     fprintf(stderr, "Invalid port number.\n");
     return -1;
   }
-  int socketfd = socket(AF_INET, SOCK_STREAM, 0);
-  struct sockaddr_in server, client;
-  if (socketfd < 0){
+  serverfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (serverfd < 0){
     fprintf(stderr, "Error opening socket.\n");
     return -1;
   }
+  setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int));
+  struct sockaddr_in server, client;
   server.sin_family = AF_INET;
   server.sin_port = htons(port);
   server.sin_addr.s_addr = INADDR_ANY;
-  if (bind(socketfd, (struct sockaddr*) &server, sizeof(server)) < 0){
+  if (bind(serverfd, (struct sockaddr*) &server, sizeof(server)) < 0){
     fprintf(stderr, "Error binding socket.\n");
     return -1;
   }
-  listen(socketfd, 5);
+  listen(serverfd, 5);
   fprintf(stdout, "Server started.\n");
 
   //Setup 15 second loop and ctrl c interrupt
@@ -249,7 +254,7 @@ int main(int argc, char** argv){
   //Handle new client connections
   while (keepRunning){
     socklen_t clientLen = sizeof(client);
-    int newfd = accept(socketfd, (struct sockaddr*) &client, &clientLen);
+    int newfd = accept(serverfd, (struct sockaddr*) &client, &clientLen);
     if (newfd < 0){
       fprintf(stderr, "Error accepting client connection.\n");
       continue;
