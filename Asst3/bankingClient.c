@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -32,9 +33,9 @@ void* userPrompt(void* arg){
     //fprintf(stdout, "command: %s, argument: %s\n", command, argument);
 
     int tempService;
-    pthread_mutex_lock(&serviceLock);
+    pthread_mutex_lock(&serviceMutex);
     tempService = inService;
-    pthread_mutex_unlock(&serviceLock);
+    pthread_mutex_unlock(&serviceMutex);
 
     if(strcmp(command, "create") == 0 || strcmp(command, "serve") == 0){
       if (tempService == 1){
@@ -64,7 +65,7 @@ void* userPrompt(void* arg){
         continue;
       }
       errno = 0;
-      double amount = strtod(argument);
+      double amount = strtod(argument, NULL);
       if (errno != 0 || amount <= 0){
         fprintf(stdout, "Please provide a positive value.\n");
         continue;
@@ -111,8 +112,10 @@ void* serverResponse(void* arg){
       pthread_cancel(inputThread);
       break;
     }
-
-    sscanf(response, "%10s\n%256s");
+    
+    command[0] = '\0';
+    argument[0] = '\0';
+    sscanf(response, "%10s\n%256s", command, argument);
     if (strcmp(command, "create") == 0){
       if (strcmp(argument, "1") == 0){
         fprintf(stdout, "Account created successfully.\n");
@@ -164,7 +167,7 @@ void* serverResponse(void* arg){
     }
     else if (strcmp(command, "query") == 0){
       errno = 0;
-      double amount = strtod(argument);
+      double amount = strtod(argument, NULL);
       if (errno == 0){
         fprintf(stdout, "Current account balance: $%.2lf\n", amount);
       } else {
@@ -186,7 +189,7 @@ int main(int argc, char** argv){
   }
 
   //Socket setup
-  int port = strtol(argv[2]);
+  int port = strtol(argv[2], NULL, 10);
   if (port <= 8192){
     fprintf(stderr, "Invalid port number.\n");
     return -1;

@@ -69,6 +69,7 @@ double serve(char* name, int option, double amount){
     } else {
       Account* currentAccount = ptr->accn;
       switch (option){
+	double res;
         case 0: //serve
           if (currentAccount->inSessionFlag == 0){
             currentAccount->inSessionFlag = 1;
@@ -90,7 +91,7 @@ double serve(char* name, int option, double amount){
           pthread_mutex_unlock(&accnMutex);
           return 1;
         case 3: //query
-          double res = currentAccount->balance;
+          res = currentAccount->balance;
           pthread_mutex_unlock(&accnMutex);
           return res;
         case 4: //end session
@@ -136,36 +137,41 @@ void* clientCommandWrapper(void* arg){
     if (read(socketfd, message, 267) == 0){
       fprintf(stdout, "Client disconnected.\n");
       close(socketfd);
-      serve(name, 4, NULL); //End any current session
+      serve(name, 4, 0); //End any current session
       break;
     }
     command[0] = '\0';
     argument[0] = '\0';
-    sscanf(input, "%10s\n%256s", command, argument);
+    sscanf(message, "%10s\n%256s", command, argument);
 
     if (strcmp(command, "create")){
       int result = createAccount(argument);
-      snprintf(response, sizeof(response), "%s\n%s", command, result);
+      snprintf(response, sizeof(response), "%s\n%d", command, result);
       write(socketfd, response, strlen(response) + 1);
     } else {
       double result;
       if (strcmp(command, "serve") == 0){
-        result = serve(argument, 0, NULL);
+        result = serve(argument, 0, 0);
         snprintf(name, sizeof(name), "%s", argument);
       } else if (strcmp(command, "end") == 0){
-        result = serve(name, 4, NULL);
+        result = serve(name, 4, 0);
       } else if (strcmp(command, "deposit") == 0){
-        double amount = strtod(argument);
+        double amount = strtod(argument, NULL);
         result = serve(name, 1, amount);
       } else if (strcmp(command, "withdraw") == 0){
-        double amount = strtod(argument);
+        double amount = strtod(argument, NULL);
         result = serve(name, 2, amount);
       } else if (strcmp(command, "query") == 0){
-        result = serve(name, 3, amount);
+        result = serve(name, 3, 0);
       } else {
         continue;
       }
-      snprintf(response, sizeof(response), "%s\n%s", command, result);
+      
+      if (strcmp(command, "query") == 0){
+	snprintf(response, sizeof(response), "%s\n%lf", command, result);
+      } else {
+	snprintf(response, sizeof(response), "%s\n%.0lf", command, result);
+      }
       write(socketfd, response, strlen(response) + 1);
     }
   }
@@ -206,10 +212,8 @@ int main(int argc, char** argv){
     return -1;
   }
 
-  serviceID = 1;
-
   //Socket setup
-  int port = strtol(argv[1]);
+  int port = strtol(argv[1], NULL, 10);
   if (port <= 8192){
     fprintf(stderr, "Invalid port number.\n");
     return -1;
